@@ -49,6 +49,17 @@ Aplikasi berjalan **sepenuhnya di komputer lokal**. Tidak ada server cloud, tida
 
 Pendukung wajib: **Node.js LTS**, **Python 3.10+**, **ffmpeg + ffprobe** di PATH, **Git**.
 
+### Library pendukung yang disetujui
+
+| Area | Library |
+|------|---------|
+| Frontend | Vite, TypeScript, React Router, TanStack Query, CSS Modules |
+| Backend | Fastify (+ pino bawaan), zod, `@fastify/multipart`, `@fastify/static` |
+| Shared | zod |
+| Python worker | numpy (selain demucs, deepfilternet, opencv-python, norfair, yt-dlp) |
+| Kualitas & test | ESLint (typescript-eslint, react-hooks, jsx-a11y), Prettier, Vitest, Testing Library, ruff, pytest |
+| Model | YuNet face detector (`face_detection_yunet_2023mar.onnx`, OpenCV Zoo) |
+
 ### Arsitektur yang disepakati
 
 - `apps/web` — frontend **React** (Vite + TypeScript). Hanya UI; tidak menjalankan proses berat.
@@ -70,7 +81,11 @@ Kalau arsitektur ini perlu diubah, update bagian ini **dan** `SETUP.md` dalam co
 2. **Panduan setup harus selalu benar.** Setiap perubahan yang berpotensi mengubah cara setup
    (dependency baru, versi tool, env var, script, port, struktur folder, model yang perlu diunduh,
    langkah instalasi) **wajib** meng-update [SETUP.md](SETUP.md) dalam commit yang sama.
-3. **Kontrak ini dibaca sebelum mengerjakan fitur.** Fitur baru maupun perubahan fitur harus mengikuti bagian 4 & 5.
+3. **Kontrak ini dibaca sebelum mengerjakan fitur.** Fitur baru maupun perubahan fitur harus mengikuti bagian 4 & 5,
+   serta dua dokumen pendamping yang juga **mengikat**:
+   - [docs/CODING_STANDARDS.md](docs/CODING_STANDARDS.md) — aturan penulisan code (penamaan, struktur, pola, testing, commit).
+   - [docs/PROMPT_GENERATE_APP.md](docs/PROMPT_GENERATE_APP.md) — spesifikasi produk, arsitektur, API, detail pipeline, dan urutan fase pembangunan.
+     Jika spesifikasi berubah, file ini wajib di-update di commit yang sama.
 4. **Tool di luar daftar bagian 2 tidak boleh ditambahkan tanpa persetujuan user.** Kalau perlu, usulkan dulu beserta alasannya,
    lalu catat di tabel bagian 2 dan di SETUP.md setelah disetujui.
 
