@@ -1,0 +1,40 @@
+# Dependencies
+node_modules/
+.venv/
+venv/
+__pycache__/
+*.pyc
+
+# Local tools & models
+tools/
+*.bin
+*.pt
+*.th
+*.onnx
+
+# Job workspace & media
+workspace/
+*.mp4
+*.mkv
+*.webm
+*.mov
+*.wav
+*.mp3
+*.m4a
+
+# Build output
+dist/
+build/
+
+# Secrets
+.env
+.env.*
+!.env.example
+cookies*.txt
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+.claude/settings.local.json
