@@ -39,14 +39,16 @@ ACTIVITY_EMA = 0.4
 
 
 def even(value: float) -> int:
-    return max(2, int(round(value / 2)) * 2)
+    """Largest even integer <= value (H.264 needs even sizes; never exceeds the source)."""
+    return max(2, int(value) // 2 * 2)
 
 
 def crop_size(width: int, height: int) -> tuple[int, int]:
-    """Largest 9:16 crop that fits the source."""
-    crop_w = min(width, even(height * 9 / 16))
-    crop_h = min(height, even(crop_w * 16 / 9))
-    return crop_w, crop_h
+    """Largest 9:16 crop that fits the source, keeping the full height when possible."""
+    ideal_width = height * 9 / 16
+    if ideal_width <= width:
+        return even(ideal_width), even(height)
+    return even(width), even(width * 16 / 9)
 
 
 def mouth_roi(gray: np.ndarray, face: np.ndarray) -> np.ndarray | None:

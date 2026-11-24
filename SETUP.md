@@ -142,6 +142,21 @@ curl -L -o tools/models/face_detection_yunet_2023mar.onnx https://github.com/ope
 
 ---
 
+## 5b. Kebutuhan disk
+
+Perkiraan per jam podcast (video 1080p):
+
+| Isi `workspace/<job>/`                                    | Ukuran                                   |
+| --------------------------------------------------------- | ---------------------------------------- |
+| Video sumber                                              | 1–2 GB                                   |
+| Audio saat analisis (sementara)                           | ±2 GB, dihapus otomatis setelah job siap |
+| Audio yang disimpan (`vocals_clean.wav`, `no_vocals.wav`) | ±1 GB                                    |
+| Per klip 30–60 detik (`reframed.mp4` + `final.mp4`)       | 20–60 MB                                 |
+
+Hapus job dari aplikasi (tombol **Hapus job**) untuk mengosongkan foldernya.
+
+---
+
 ## 6. Konfigurasi `.env`
 
 ```bash
@@ -210,9 +225,15 @@ npm run check:py    # ruff + pytest (Python worker)
 
 ## 10. Troubleshooting
 
-| Gejala                                         | Penyebab & solusi                                                                                                                                                            |
-| ---------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `ffmpeg` "Belum ada" padahal sudah di-install  | Terminal atau VS Code dibuka sebelum instalasi. Tutup semua terminal/VS Code lalu buka lagi.                                                                                 |
-| yt-dlp gagal mengunduh                         | YouTube sering berubah. Perbarui dengan `.venv/Scripts/python -m pip install -U "yt-dlp[default]"`. Pastikan `deno --version` berjalan (status tools menampilkan Deno siap). |
-| Log yt-dlp berisi "n challenge solving failed" | Deno belum ada di PATH atau paket `yt-dlp-ejs` belum terpasang. Pasang Deno, lalu ulangi `pip install -r workers/requirements.txt`.                                          |
-| `ModuleNotFoundError: torchaudio.backend`      | torchaudio terlalu baru. Ulangi `pip install -r workers/requirements.txt`.                                                                                                   |
+| Gejala                                              | Penyebab & solusi                                                                                                                                                            |
+| --------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `ffmpeg` "Belum ada" padahal sudah di-install       | Terminal atau VS Code dibuka sebelum instalasi. Tutup semua terminal/VS Code lalu buka lagi.                                                                                 |
+| yt-dlp gagal mengunduh                              | YouTube sering berubah. Perbarui dengan `.venv/Scripts/python -m pip install -U "yt-dlp[default]"`. Pastikan `deno --version` berjalan (status tools menampilkan Deno siap). |
+| `Port 5173/5174 is already in use`                  | Server lama masih berjalan. Tutup terminal lamanya, atau ubah `SERVER_PORT` di `.env` (port web 5173 ada di `apps/web/vite.config.ts`).                                      |
+| Demucs sangat lambat                                | Normal di CPU (±1× durasi audio). Dengan GPU NVIDIA: pasang torch versi CUDA (langkah 3) dan set `DEMUCS_DEVICE=cuda`.                                                       |
+| `DEMUCS_DEVICE=cuda tetapi GPU CUDA tidak tersedia` | torch terpasang versi CPU. Ulangi instalasi torch CUDA atau kembalikan ke `DEMUCS_DEVICE=cpu`.                                                                               |
+| Status tools: "Subtitle (ffmpeg libass)" belum siap | Build ffmpeg tanpa libass. Pakai build "full" (Windows: `winget install Gyan.FFmpeg`).                                                                                       |
+| Halaman putih setelah `npm run build`               | Muat ulang halaman (Ctrl+F5). Server membaca file build per permintaan, jadi tidak perlu restart.                                                                            |
+| Transkrip kurang akurat                             | Pakai model lebih besar (`ggml-large-v3.bin`) lewat `WHISPER_MODEL`, atau set bahasa yang tepat di Pengaturan lanjutan.                                                      |
+| Log yt-dlp berisi "n challenge solving failed"      | Deno belum ada di PATH atau paket `yt-dlp-ejs` belum terpasang. Pasang Deno, lalu ulangi `pip install -r workers/requirements.txt`.                                          |
+| `ModuleNotFoundError: torchaudio.backend`           | torchaudio terlalu baru. Ulangi `pip install -r workers/requirements.txt`.                                                                                                   |

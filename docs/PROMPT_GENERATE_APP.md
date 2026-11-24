@@ -4,6 +4,10 @@
 > Untuk melanjutkan pengembangan di kemudian hari, cukup tulis: _"Lanjutkan pembuatan aplikasi sesuai docs/PROMPT_GENERATE_APP.md, mulai dari Fase N."_
 >
 > Jika ada keputusan baru yang mengubah isi prompt ini, perbarui file ini di commit yang sama agar prompt selalu mencerminkan aplikasi yang sebenarnya.
+>
+> **Status (24 Nov 2026):** Fase 1–10 selesai dan sudah diimplementasikan. Spesifikasi di bawah sudah disesuaikan dengan
+> implementasinya. Perbedaan penting dari rencana awal: render memakai ffmpeg + subtitle ASS (bukan editly),
+> normalisasi loudness memakai kompresor + gain terukur + limiter, dan whisper.cpp di Windows memakai binary resmi.
 
 ---
 
@@ -191,7 +195,9 @@ Clip {
   startSec: number; endSec: number       // hasil penyesuaian user
   captions: Caption[]                    // bisa diedit user
   stages: Record<"track-faces"|"reframe"|"render", StageState>
-  output?: string                        // path final.mp4
+  output: string | null                  // path final.mp4
+  renderRequestedAt: string | null       // diisi saat Render diklik, dihapus saat klip diedit
+  // Status klip (draft/queued/rendering/done/failed/cancelled) diturunkan dengan clipStatus(), tidak disimpan.
 }
 
 Caption { startSec: number; endSec: number; text: string }   // waktu relatif terhadap awal klip
@@ -280,7 +286,7 @@ Tanpa AI cloud. Algoritma di `apps/server/src/pipeline/moments/` dipecah menjadi
    - `completeness`: kalimat terakhir diakhiri tanda baca dan bukan kata sambung ("dan", "tapi", "jadi", "karena").
    - `durationFit`: kedekatan dengan `targetClipSec`.
    - `confidence`: rata-rata probabilitas kata dari whisper.
-4. **Skor** = jumlah berbobot (bobot di `defaults.ts`, total 1) × 100. Setiap fitur yang menonjol menghasilkan string `reasons` dalam bahasa Indonesia.
+4. **Skor** = jumlah berbobot (bobot di `defaults.ts`, total 1) × 100. `reasons` (bahasa Indonesia) berisi maksimal 3 fitur yang lolos ambang, diurutkan dari yang paling membedakan kandidat ini dari kandidat lain (hook selalu pertama). Menampilkan semua fitur yang lolos membuat semua kandidat terlihat sama.
 5. **Seleksi:** urutkan berdasarkan skor, ambil secara greedy tanpa tumpang tindih (overlap ≤ 20%), sebanyak maksimal `maxCandidates`.
 6. Tulis ke `moments/candidates.json`. Setelah stage ini, status job berubah menjadi `ready`.
 
@@ -299,7 +305,8 @@ Tanpa AI cloud. Algoritma di `apps/server/src/pipeline/moments/` dipecah menjadi
 
 - `python -m clipper_workers.reframe --input source.mp4 --faces faces.json --start <s> --end <e> --output clips/<id>/`
 - Baca frame dengan OpenCV, crop 9:16 setinggi penuh mengikuti `centerX` yang diinterpolasi per frame, resize ke **1080×1920**, lalu kirim frame mentah ke `ffmpeg` lewat stdin (`-f rawvideo -pix_fmt bgr24`) → `libx264 -crf 18 -preset medium -pix_fmt yuv420p`, **tanpa audio**. Jangan memakai `cv2.VideoWriter` karena kualitasnya buruk.
-- Potong audio klip dari `vocals_clean.wav`. Jika `musicVolume > 0`, campur dengan `no_vocals.wav` × volume. Normalisasi loudness memakai `loudnorm` ke −14 LUFS. Hasilnya ditulis ke `clips/<id>/audio.wav`.
+- Potong audio klip dari `vocals_clean.wav`. Jika `musicVolume > 0`, campur dengan `no_vocals.wav` × volume.
+- Normalisasi ke −14 LUFS (true peak −2 dB): kompresor ringan → gain sebesar (target − hasil ukur) → limiter, lalu ukur hasilnya dan koreksi gain sampai selisih ≤ 0,5 LU. `loudnorm` saja tidak dipakai karena pada audio bicara ia jatuh ke mode dinamis dan hasilnya kurang (terukur −17 LUFS). Hasil: `clips/<id>/audio.wav`.
 
 ### 7.9 `render` — ffmpeg + subtitle ASS (per klip)
 

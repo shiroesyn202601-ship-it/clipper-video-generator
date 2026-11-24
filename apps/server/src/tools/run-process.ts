@@ -29,12 +29,22 @@ export type RunProcessResult = {
   stderrTail: string[];
 };
 
+function processUserMessage(code: ProcessError["code"], command: string): string {
+  if (code === "PROCESS_CANCELLED") return "Proses dibatalkan.";
+  const name = path.basename(command).replace(/\.exe$/i, "");
+  if (code === "PROCESS_NOT_FOUND") {
+    return `Program ${name} tidak ditemukan. Buka halaman Status tools dan ikuti SETUP.md.`;
+  }
+  return `Program ${name} gagal dijalankan. Lihat log tahap ini untuk detail.`;
+}
+
 export class ProcessError extends AppError {
   readonly exitCode: number | null;
   readonly stderrTail: string[];
 
   constructor(options: {
     code: "PROCESS_NOT_FOUND" | "PROCESS_FAILED" | "PROCESS_CANCELLED";
+    command: string;
     message: string;
     exitCode: number | null;
     stderrTail: string[];
@@ -43,10 +53,7 @@ export class ProcessError extends AppError {
     super({
       code: options.code,
       message: options.message,
-      userMessage:
-        options.code === "PROCESS_CANCELLED"
-          ? "Proses dibatalkan."
-          : "Tool eksternal gagal dijalankan. Lihat log untuk detail.",
+      userMessage: processUserMessage(options.code, options.command),
       cause: options.cause,
     });
     this.exitCode = options.exitCode;
@@ -113,6 +120,7 @@ export async function runProcess(options: RunProcessOptions): Promise<RunProcess
           reject(
             new ProcessError({
               code: "PROCESS_NOT_FOUND",
+              command,
               message: `Command not found: ${command}`,
               exitCode: null,
               stderrTail,
@@ -134,6 +142,7 @@ export async function runProcess(options: RunProcessOptions): Promise<RunProcess
           reject(
             new ProcessError({
               code: "PROCESS_FAILED",
+              command,
               message: `${path.basename(command)} exited with code ${exitCode}: ${stderrTail.slice(-3).join(" | ")}`,
               exitCode,
               stderrTail,
@@ -152,6 +161,7 @@ export async function runProcess(options: RunProcessOptions): Promise<RunProcess
 function cancelledError(command: string, stderrTail: string[]): ProcessError {
   return new ProcessError({
     code: "PROCESS_CANCELLED",
+    command,
     message: `Cancelled: ${command}`,
     exitCode: null,
     stderrTail,

@@ -5,6 +5,7 @@ import type { Config } from "../config.ts";
 import type { QueueTask } from "../jobs/job-queue.ts";
 import type { JobStore } from "../jobs/job-store.ts";
 import { AppError, errorMessage } from "../lib/errors.ts";
+import { removeIntermediateAudio } from "./cleanup.ts";
 import type { AnalysisStage, ClipStage, ClipStageContext, StageContext } from "./stage.ts";
 
 type Logger = {
@@ -135,7 +136,17 @@ export function createPipelineRunner(deps: PipelineDeps) {
       }
     }
 
+    // Analysis is complete: free the large intermediate audio no clip stage needs.
+    const removed: readonly string[] = await removeIntermediateAudio(
+      store.jobDir(jobId),
+      store.get(jobId),
+    ).catch((error: unknown) => {
+      logger.error({ jobId, err: errorMessage(error) }, "intermediate cleanup failed");
+      return [];
+    });
     await store.update(jobId, (draft) => {
+      const kept = Object.entries(draft.artifacts).filter(([key]) => !removed.includes(key));
+      draft.artifacts = Object.fromEntries(kept);
       draft.status = "ready";
     });
   }

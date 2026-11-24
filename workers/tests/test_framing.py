@@ -79,3 +79,12 @@ def test_interpolate_jumps_at_cuts_and_holds_edges() -> None:
     assert interpolate(keys, 1.0) == 900
     assert interpolate(keys, 1.5) == 950
     assert interpolate(keys, 5) == 1000
+
+
+def test_crop_size_keeps_full_height_and_even_sizes() -> None:
+    from clipper_workers.track_faces import crop_size
+
+    assert crop_size(1920, 1080) == (606, 1080)
+    assert crop_size(1280, 720) == (404, 720)
+    # Already vertical and narrower than 9:16: width-limited.
+    assert crop_size(500, 1920) == (500, 888)

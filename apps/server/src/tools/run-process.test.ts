@@ -43,6 +43,7 @@ describe("runProcess", () => {
       args: [],
     }).catch((caught: unknown) => caught);
     expect((error as ProcessError).code).toBe("PROCESS_NOT_FOUND");
+    expect((error as ProcessError).userMessage).toContain("definitely-not-a-real-command-xyz tidak ditemukan");
   });
 
   it("stops the process when aborted", async () => {
