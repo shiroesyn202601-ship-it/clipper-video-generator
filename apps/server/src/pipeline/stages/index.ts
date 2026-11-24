@@ -1,6 +1,8 @@
 import type { AnalysisStage, ClipStage } from "../stage.ts";
+import { denoiseStage } from "./denoise.ts";
 import { downloadStage } from "./download.ts";
 import { extractAudioStage } from "./extract-audio.ts";
+import { separateVocalsStage } from "./separate-vocals.ts";
 import { simulatedAnalysisStages, simulatedClipStages } from "./simulated.ts";
 
 const simulated = (id: AnalysisStage["id"]): AnalysisStage => {
@@ -13,8 +15,8 @@ const simulated = (id: AnalysisStage["id"]): AnalysisStage => {
 export const analysisStages: readonly AnalysisStage[] = [
   downloadStage,
   extractAudioStage,
-  simulated("separate-vocals"),
-  simulated("denoise"),
+  separateVocalsStage,
+  denoiseStage,
   simulated("transcribe"),
   simulated("find-moments"),
 ];

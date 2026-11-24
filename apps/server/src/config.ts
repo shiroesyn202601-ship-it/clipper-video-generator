@@ -62,6 +62,13 @@ function loadConfig() {
     faceModel: path.resolve(REPO_ROOT, env.FACE_MODEL),
     demucs: Object.freeze({ model: env.DEMUCS_MODEL, device: env.DEMUCS_DEVICE }),
     workersDir: path.join(REPO_ROOT, "workers"),
+    /** Environment for Python workers: UTF-8 I/O and unbuffered stdout for live progress. */
+    pythonEnv: Object.freeze({
+      ...process.env,
+      PYTHONUTF8: "1",
+      PYTHONIOENCODING: "utf-8",
+      PYTHONUNBUFFERED: "1",
+    }),
   });
 }
 

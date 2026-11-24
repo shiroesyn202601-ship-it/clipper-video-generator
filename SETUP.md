@@ -86,6 +86,12 @@ Cek:
 .venv/Scripts/python -c "import cv2, norfair, demucs, df; print('ok')"
 ```
 
+> **Unduhan otomatis saat pertama kali dipakai:** model Demucs `htdemucs` (±80 MB, ke `~/.cache/torch/hub`) dan
+> model DeepFilterNet3 (±10 MB, ke cache DeepFilterNet) diunduh sekali saat job pertama berjalan. Butuh koneksi internet.
+>
+> **Perkiraan waktu di CPU:** pemisahan suara Demucs ±1× durasi audio (podcast 1 jam ≈ 1 jam). GPU NVIDIA
+> mempercepat jauh (lihat catatan GPU di atas).
+
 ---
 
 ## 4. whisper.cpp (transkrip) + model
