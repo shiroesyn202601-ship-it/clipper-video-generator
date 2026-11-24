@@ -193,7 +193,8 @@ export const copy = {
     logo: "Logo",
     noLogo: "Belum ada logo.",
     overlays: "Overlay",
-    noOverlays: "Belum ada overlay. Bisa PNG transparan, GIF, atau video WEBM/MP4 (mis. tombol subscribe).",
+    noOverlays:
+      "Belum ada overlay. Bisa PNG transparan, GIF, atau video WEBM/MP4 (mis. tombol subscribe).",
     addOverlay: "Tambah overlay",
     upload: "Unggah file",
     replace: "Ganti file",

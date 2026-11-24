@@ -36,21 +36,21 @@ memakai layanan online pihak ketiga **asalkan gratis**. Aturan lengkapnya ada di
 
 ## 2. Tools & Library (Stack Resmi)
 
-| #   | Kebutuhan                    | Tool                                                                             | Repo                                                                   |
-| --- | ---------------------------- | -------------------------------------------------------------------------------- | ---------------------------------------------------------------------- |
-| 1   | Bahasa / framework aplikasi  | **React** (UI)                                                                   | https://react.dev                                                      |
-| 2   | Ambil video sumber           | **yt-dlp**                                                                       | https://github.com/yt-dlp/yt-dlp                                       |
-| 3   | Transkrip & cari momen       | **whisper.cpp**                                                                  | https://github.com/ggml-org/whisper.cpp                                |
-| 4   | Bersihkan suara dari noise   | **DeepFilterNet**                                                                | https://github.com/rikorose/deepfilternet                              |
-| 5   | Pisahkan suara dari musik    | **Demucs**                                                                       | https://github.com/facebookresearch/demucs                             |
-| 6   | Kunci wajah & auto-crop 9:16 | **OpenCV** + **Norfair**                                                         | https://github.com/opencv/opencv · https://github.com/tryolabs/norfair |
-| 7   | Susun subtitle + render      | **ffmpeg + subtitle ASS (libass)** — menggantikan editly, lihat catatan di bawah | https://ffmpeg.org · https://github.com/libass/libass                  |
-| 8   | UI anti "AI slop"            | **hallmark** (agent skill)                                                       | https://github.com/nutlope/hallmark                                    |
-| 9   | Beresin detail kecil UI      | **make-interfaces-feel-better** (agent skill)                                    | https://github.com/jakubkrehel/make-interfaces-feel-better             |
-| 10  | Finishing UI                 | **benjitaylor/skills** (skill _stageshow_)                                       | https://github.com/benjitaylor/skills                                  |
-| 11  | Transkrip online cepat (opsional, gratis) | **Groq API** (whisper-large-v3-turbo, free tier) — fallback ke whisper.cpp | https://console.groq.com/docs/speech-to-text |
-| 12  | Tulis komentar kreator (opsional, gratis) | **Groq API chat** (llama-3.3-70b-versatile, free tier, key yang sama dengan #11) | https://console.groq.com/docs/text-chat |
-| 13  | Suara komentar kreator (opsional, gratis) | **Edge-TTS** (suara online Microsoft, paket Python `edge-tts`) | https://github.com/rany2/edge-tts |
+| #   | Kebutuhan                                 | Tool                                                                             | Repo                                                                   |
+| --- | ----------------------------------------- | -------------------------------------------------------------------------------- | ---------------------------------------------------------------------- |
+| 1   | Bahasa / framework aplikasi               | **React** (UI)                                                                   | https://react.dev                                                      |
+| 2   | Ambil video sumber                        | **yt-dlp**                                                                       | https://github.com/yt-dlp/yt-dlp                                       |
+| 3   | Transkrip & cari momen                    | **whisper.cpp**                                                                  | https://github.com/ggml-org/whisper.cpp                                |
+| 4   | Bersihkan suara dari noise                | **DeepFilterNet**                                                                | https://github.com/rikorose/deepfilternet                              |
+| 5   | Pisahkan suara dari musik                 | **Demucs**                                                                       | https://github.com/facebookresearch/demucs                             |
+| 6   | Kunci wajah & auto-crop 9:16              | **OpenCV** + **Norfair**                                                         | https://github.com/opencv/opencv · https://github.com/tryolabs/norfair |
+| 7   | Susun subtitle + render                   | **ffmpeg + subtitle ASS (libass)** — menggantikan editly, lihat catatan di bawah | https://ffmpeg.org · https://github.com/libass/libass                  |
+| 8   | UI anti "AI slop"                         | **hallmark** (agent skill)                                                       | https://github.com/nutlope/hallmark                                    |
+| 9   | Beresin detail kecil UI                   | **make-interfaces-feel-better** (agent skill)                                    | https://github.com/jakubkrehel/make-interfaces-feel-better             |
+| 10  | Finishing UI                              | **benjitaylor/skills** (skill _stageshow_)                                       | https://github.com/benjitaylor/skills                                  |
+| 11  | Transkrip online cepat (opsional, gratis) | **Groq API** (whisper-large-v3-turbo, free tier) — fallback ke whisper.cpp       | https://console.groq.com/docs/speech-to-text                           |
+| 12  | Tulis komentar kreator (opsional, gratis) | **Groq API chat** (llama-3.3-70b-versatile, free tier, key yang sama dengan #11) | https://console.groq.com/docs/text-chat                                |
+| 13  | Suara komentar kreator (opsional, gratis) | **Edge-TTS** (suara online Microsoft, paket Python `edge-tts`)                   | https://github.com/rany2/edge-tts                                      |
 
 > **Catatan tool #7 (24 Nov 2026):** editly (https://github.com/mifi/editly) awalnya dipilih, tetapi dependency native-nya
 > (`gl@5`, `canvas@2`) hanya punya binary untuk Node 12–16 dan gagal di-compile pada Node modern di Windows.

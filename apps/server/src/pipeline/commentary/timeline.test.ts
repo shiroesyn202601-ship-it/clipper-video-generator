@@ -5,7 +5,9 @@ import { LEAD_SEC, commentaryCaptions, shiftCaptions, timelineFilter } from "./t
 describe("hasCommentary", () => {
   it("is false for old clips, disabled commentary, and empty text", () => {
     expect(hasCommentary(null)).toBe(false);
-    expect(hasCommentary(clipCommentarySchema.parse({ intro: "Halo", enabled: false }))).toBe(false);
+    expect(hasCommentary(clipCommentarySchema.parse({ intro: "Halo", enabled: false }))).toBe(
+      false,
+    );
     expect(hasCommentary(clipCommentarySchema.parse({ intro: "  " }))).toBe(false);
     expect(hasCommentary(clipCommentarySchema.parse({ outro: "Setuju?" }))).toBe(true);
   });
@@ -47,9 +49,11 @@ describe("timelineFilter", () => {
     expect(filter).toContain("[2:v]scale=1080:1920,boxblur=22:2");
     expect(filter).toContain("[3:a]aresample=48000");
     expect(filter).toContain("[5:a]");
-    expect(filter.endsWith("[vintro][aintro][vmain][amain][voutro][aoutro]concat=n=3:v=1:a=1[vout][aout]")).toBe(
-      true,
-    );
+    expect(
+      filter.endsWith(
+        "[vintro][aintro][vmain][amain][voutro][aoutro]concat=n=3:v=1:a=1[vout][aout]",
+      ),
+    ).toBe(true);
   });
 
   it("handles an outro only", () => {
@@ -57,6 +61,8 @@ describe("timelineFilter", () => {
       ...base,
       parts: [{ name: "outro", audio: "commentary/outro.mp3", words: [], durationSec: 5 }],
     });
-    expect(filter.endsWith("[vmain][amain][voutro][aoutro]concat=n=2:v=1:a=1[vout][aout]")).toBe(true);
+    expect(filter.endsWith("[vmain][amain][voutro][aoutro]concat=n=2:v=1:a=1[vout][aout]")).toBe(
+      true,
+    );
   });
 });

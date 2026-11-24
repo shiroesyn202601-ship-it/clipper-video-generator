@@ -4,7 +4,7 @@ import {
   type ClipCommentary,
   type CommentaryVoice,
 } from "@clipper/shared";
-import { useState } from "react";
+import { useId, useState } from "react";
 import { Button } from "../../components/ui/Button.tsx";
 import { copy } from "../../lib/copy.ts";
 import styles from "./CommentaryEditor.module.css";
@@ -29,6 +29,7 @@ export function CommentaryEditor({
   onGenerate,
 }: CommentaryEditorProps) {
   const [persona, setPersona] = useState("");
+  const idPrefix = useId();
 
   return (
     <div className={styles.editor}>
@@ -66,19 +67,22 @@ export function CommentaryEditor({
               ["outro", text.outroLabel, COMMENTARY_LIMITS.outroMaxChars],
             ] as const
           ).map(([key, label, max]) => (
-            <label key={key} className={styles.field}>
+            <div key={key} className={styles.field}>
               <span className={styles.labelRow}>
-                <span className={styles.label}>{label}</span>
+                <label htmlFor={`${idPrefix}-${key}`} className={styles.label}>
+                  {label}
+                </label>
                 <span className={styles.counter}>{text.counter(value[key].length, max)}</span>
               </span>
               <textarea
+                id={`${idPrefix}-${key}`}
                 className={styles.textarea}
                 rows={key === "intro" ? 2 : 3}
                 maxLength={max}
                 value={value[key]}
                 onChange={(event) => onChange({ ...value, [key]: event.target.value })}
               />
-            </label>
+            </div>
           ))}
           <label className={styles.field}>
             <span className={styles.label}>{text.voice}</span>

@@ -8,14 +8,16 @@ import {
   type BrandKit,
   type BrandOverlay,
 } from "@clipper/shared";
-import { useState, type CSSProperties, type ReactNode } from "react";
+import { useId, useState, type CSSProperties, type ReactNode } from "react";
 import { Button } from "../components/ui/Button.tsx";
 import { useAppSettings, useUpdateAppSettings } from "../features/settings/settings-queries.ts";
 import { api, errorText } from "../lib/api.ts";
 import { copy } from "../lib/copy.ts";
 import styles from "./BrandPage.module.css";
 
-const ACCEPT = [...BRAND_IMAGE_EXTENSIONS, ...BRAND_VIDEO_EXTENSIONS].map((ext) => `.${ext}`).join(",");
+const ACCEPT = [...BRAND_IMAGE_EXTENSIONS, ...BRAND_VIDEO_EXTENSIONS]
+  .map((ext) => `.${ext}`)
+  .join(",");
 const text = copy.brand;
 type Placement = Pick<BrandOverlay, "position" | "size" | "opacity" | "margin">;
 
@@ -30,7 +32,13 @@ function newOverlayId(): string {
 /** CSS placement inside the 9:16 preview, mirroring the ffmpeg overlay maths. */
 function placementStyle(item: Placement): CSSProperties {
   if (item.position === "full") {
-    return { left: 0, top: "50%", width: "100%", transform: "translateY(-50%)", opacity: item.opacity };
+    return {
+      left: 0,
+      top: "50%",
+      width: "100%",
+      transform: "translateY(-50%)",
+      opacity: item.opacity,
+    };
   }
   const margin = `${item.margin}cqw`;
   const style: CSSProperties = { width: `${item.size}%`, opacity: item.opacity };
@@ -66,12 +74,28 @@ function tintBackground(tint: BrandKit["tint"]): string {
   return `linear-gradient(180deg, ${solid} 0%, ${clear} ${reach}), linear-gradient(0deg, ${solid} 0%, ${clear} ${reach})`;
 }
 
-function Media({ file, className, style }: { file: string; className?: string; style?: CSSProperties }) {
+function Media({
+  file,
+  className,
+  style,
+}: {
+  file: string;
+  className?: string | undefined;
+  style?: CSSProperties;
+}) {
   const src = api.brandFileUrl(file);
   return isVideo(file) ? (
     // Decorative preview of a silent overlay; it carries no speech to caption.
-    // eslint-disable-next-line jsx-a11y/media-has-caption
-    <video className={className} style={style} src={src} autoPlay loop muted playsInline aria-hidden />
+    <video
+      className={className}
+      style={style}
+      src={src}
+      autoPlay
+      loop
+      muted
+      playsInline
+      aria-hidden
+    />
   ) : (
     <img className={className} style={style} src={src} alt="" />
   );
@@ -84,7 +108,12 @@ function Preview({ brand }: { brand: BrandKit }) {
         <div className={styles.tint} style={{ background: tintBackground(brand.tint) }} />
       )}
       {brand.overlays.map((overlay) => (
-        <Media key={overlay.id} file={overlay.file} className={styles.layer} style={placementStyle(overlay)} />
+        <Media
+          key={overlay.id}
+          file={overlay.file}
+          className={styles.layer}
+          style={placementStyle(overlay)}
+        />
       ))}
       {brand.logo.file && (
         <Media file={brand.logo.file} className={styles.layer} style={placementStyle(brand.logo)} />
@@ -103,13 +132,17 @@ function Range(props: {
   display: string;
   onChange: (value: number) => void;
 }) {
+  const id = useId();
   return (
-    <label className={styles.field}>
+    <div className={styles.field}>
       <span className={styles.labelRow}>
-        <span className={styles.label}>{props.label}</span>
+        <label htmlFor={id} className={styles.label}>
+          {props.label}
+        </label>
         <span className={styles.value}>{props.display}</span>
       </span>
       <input
+        id={id}
         type="range"
         min={props.min}
         max={props.max}
@@ -117,7 +150,7 @@ function Range(props: {
         value={props.value}
         onChange={(event) => props.onChange(Number(event.target.value))}
       />
-    </label>
+    </div>
   );
 }
 
@@ -135,7 +168,9 @@ function PlacementFields<T extends Placement>(props: {
         <select
           className={styles.control}
           value={value.position}
-          onChange={(event) => onChange({ ...value, position: event.target.value as T["position"] })}
+          onChange={(event) =>
+            onChange({ ...value, position: event.target.value as T["position"] })
+          }
         >
           {positions.map((position) => (
             <option key={position} value={position}>
@@ -253,7 +288,10 @@ function BrandEditor({ initial }: { initial: BrandKit }) {
                 onUploaded={(file) => update({ logo: { ...brand.logo, file } })}
                 onError={setUploadError}
               />
-              <Button variant="ghost" onClick={() => update({ logo: { ...brand.logo, file: null } })}>
+              <Button
+                variant="ghost"
+                onClick={() => update({ logo: { ...brand.logo, file: null } })}
+              >
                 {text.remove}
               </Button>
             </div>
@@ -363,7 +401,9 @@ function BrandEditor({ initial }: { initial: BrandKit }) {
             <input
               type="checkbox"
               checked={brand.tint.enabled}
-              onChange={(event) => update({ tint: { ...brand.tint, enabled: event.target.checked } })}
+              onChange={(event) =>
+                update({ tint: { ...brand.tint, enabled: event.target.checked } })
+              }
             />
             <span>{text.tintEnabled}</span>
           </label>
@@ -386,7 +426,10 @@ function BrandEditor({ initial }: { initial: BrandKit }) {
                   value={brand.tint.style}
                   onChange={(event) =>
                     update({
-                      tint: { ...brand.tint, style: event.target.value as BrandKit["tint"]["style"] },
+                      tint: {
+                        ...brand.tint,
+                        style: event.target.value as BrandKit["tint"]["style"],
+                      },
                     })
                   }
                 >

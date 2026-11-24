@@ -186,7 +186,8 @@ export function buildStyledAss(
 
   const events: string[] = [];
   const dialogue = (start: number, end: number, text: string): void => {
-    if (end > start) events.push(`Dialogue: 0,${assTime(start)},${assTime(end)},Default,,0,0,0,,${text}`);
+    if (end > start)
+      events.push(`Dialogue: 0,${assTime(start)},${assTime(end)},Default,,0,0,0,,${text}`);
   };
 
   for (const caption of captions) {

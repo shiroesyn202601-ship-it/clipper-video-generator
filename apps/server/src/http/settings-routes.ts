@@ -8,7 +8,7 @@ import type { SettingsStore } from "../settings/settings-store.ts";
 import { parseInput } from "./validate.ts";
 
 const fontFiles = new Set<string>(
-  Object.values(CAPTION_FONTS).filter((file): file is string => file !== null),
+  Object.values(CAPTION_FONTS).flatMap((file) => (file === null ? [] : [file])),
 );
 const fontParamsSchema = z.object({ file: z.string().refine((file) => fontFiles.has(file)) });
 

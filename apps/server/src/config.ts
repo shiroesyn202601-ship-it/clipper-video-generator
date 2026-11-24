@@ -40,7 +40,14 @@ const envSchema = z.object({
 
 /** "a, b,,c" → ["a", "b", "c"] (duplicates removed). */
 export function parseApiKeys(value: string): string[] {
-  return [...new Set(value.split(/[,\s]+/).map((key) => key.trim()).filter(Boolean))];
+  return [
+    ...new Set(
+      value
+        .split(/[,\s]+/)
+        .map((key) => key.trim())
+        .filter(Boolean),
+    ),
+  ];
 }
 
 /** Resolves a path from .env against the repo root; bare command names stay as-is (PATH lookup). */

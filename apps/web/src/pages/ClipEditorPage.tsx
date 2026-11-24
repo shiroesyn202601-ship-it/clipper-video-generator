@@ -230,10 +230,9 @@ function ClipEditor({ job, clip, number, onDeleted }: ClipEditorProps) {
               isGenerating={generateCommentary.isPending}
               onChange={setDraftCommentary}
               onGenerate={(persona) =>
-                generateCommentary.mutate(
-                  persona.trim() ? { persona: persona.trim() } : {},
-                  { onSuccess: () => setDraftCommentary(undefined) },
-                )
+                generateCommentary.mutate(persona.trim() ? { persona: persona.trim() } : {}, {
+                  onSuccess: () => setDraftCommentary(undefined),
+                })
               }
             />
           </section>

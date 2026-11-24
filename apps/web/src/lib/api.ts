@@ -146,7 +146,11 @@ export const api = {
   updateClip: (jobId: string, clipId: string, body: UpdateClipBody): Promise<Clip> =>
     request(clipPath(jobId, clipId), { method: "PATCH", body, schema: clipSchema }),
 
-  generateCommentary: (jobId: string, clipId: string, body: GenerateCommentaryBody): Promise<Clip> =>
+  generateCommentary: (
+    jobId: string,
+    clipId: string,
+    body: GenerateCommentaryBody,
+  ): Promise<Clip> =>
     request(`${clipPath(jobId, clipId)}/commentary`, { method: "POST", body, schema: clipSchema }),
 
   renderClip: (jobId: string, clipId: string): Promise<Clip> =>

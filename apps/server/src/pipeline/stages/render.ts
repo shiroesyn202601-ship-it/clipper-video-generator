@@ -58,7 +58,10 @@ function withExistingFiles(brand: BrandKit, brandDir: string): BrandKit {
   const exists = (file: string): boolean => existsSync(path.join(brandDir, file));
   return {
     ...brand,
-    logo: { ...brand.logo, file: brand.logo.file && exists(brand.logo.file) ? brand.logo.file : null },
+    logo: {
+      ...brand.logo,
+      file: brand.logo.file && exists(brand.logo.file) ? brand.logo.file : null,
+    },
     overlays: brand.overlays.filter((overlay) => exists(overlay.file)),
   };
 }

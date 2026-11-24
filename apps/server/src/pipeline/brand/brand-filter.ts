@@ -98,7 +98,9 @@ export function buildBrandGraph(options: {
         : overlayPosition(layer.position, Math.round((width * layer.margin) / 100));
     const enable = layer.enable ? `:enable='${layer.enable}'` : "";
     const output = `[branded${index}]`;
-    filters.push(`${current}[brand${index}]overlay=${x}:${y}:shortest=1:format=auto${enable}${output}`);
+    filters.push(
+      `${current}[brand${index}]overlay=${x}:${y}:shortest=1:format=auto${enable}${output}`,
+    );
     current = output;
   });
   return { inputs, filters, outputLabel: current };

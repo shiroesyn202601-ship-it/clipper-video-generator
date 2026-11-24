@@ -113,7 +113,10 @@ export function normalizeGroq(chunks: readonly GroqChunk[], fallbackLanguage: st
       previousText = key;
 
       const probability = segmentConfidence(segment.avg_logprob);
-      const spelled = punctuateWords(own.map((word) => word.word), text);
+      const spelled = punctuateWords(
+        own.map((word) => word.word),
+        text,
+      );
       const timed: TranscriptWord[] = own
         .map((word, i) => ({
           text: (spelled[i] ?? word.word).trim(),

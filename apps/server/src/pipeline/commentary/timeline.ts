@@ -107,7 +107,8 @@ async function speak(
     logFile: context.logFile,
     errorCode: "COMMENTARY_TTS_FAILED",
     userMessages: {
-      default: "Suara komentar (Edge-TTS) gagal dibuat. Periksa koneksi internet, lalu render ulang.",
+      default:
+        "Suara komentar (Edge-TTS) gagal dibuat. Periksa koneksi internet, lalu render ulang.",
       EDGE_TTS_MISSING:
         "Paket edge-tts belum terpasang. Jalankan ulang pip install -r workers/requirements.txt.",
     },

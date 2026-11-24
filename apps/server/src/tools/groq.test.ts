@@ -27,7 +27,7 @@ describe("GroqKeyPool", () => {
     expect(pool.pick(0)).toEqual({ kind: "key", key: "b" });
     pool.coolDown("b", 3000, 0);
     expect(pool.pick(0)).toEqual({ kind: "wait", ms: 3000 });
-    expect(pool.pick(5000)).toEqual({ kind: "key", key: "b" });
+    expect(pool.pick(3500)).toEqual({ kind: "key", key: "b" });
     pool.reject("b");
     pool.reject("c");
     expect(pool.pick(0)).toEqual({ kind: "none" });

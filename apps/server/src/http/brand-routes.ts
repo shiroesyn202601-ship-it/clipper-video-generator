@@ -35,7 +35,8 @@ export function registerBrandRoutes(app: FastifyInstance, deps: { brandDir: stri
         continue;
       }
       if (part.type !== "file") continue;
-      if (!kind) throw badUpload("kind field missing before file", "Jenis file brand tidak dikirim.");
+      if (!kind)
+        throw badUpload("kind field missing before file", "Jenis file brand tidak dikirim.");
       const extension = path.extname(part.filename).slice(1).toLowerCase();
       if (!ALLOWED_EXTENSIONS.has(extension)) {
         part.file.resume();

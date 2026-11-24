@@ -54,7 +54,9 @@ describe("brand kit", () => {
       "[2:v]colorkey=0x00FF00:0.30:0.10,scale=324:-2,fps=30,format=rgba[brand0]",
     );
     expect(graph.filters[1]).toContain("enable='gte(t,26.00)'");
-    expect(graph.filters[2]).toBe("[3:v]scale=216:-2,fps=30,format=rgba,colorchannelmixer=aa=0.50[brand1]");
+    expect(graph.filters[2]).toBe(
+      "[3:v]scale=216:-2,fps=30,format=rgba,colorchannelmixer=aa=0.50[brand1]",
+    );
     expect(graph.outputLabel).toBe("[branded1]");
   });
 });

@@ -63,20 +63,20 @@ Pengguna: kreator / editor konten podcast, umumnya berbahasa Indonesia.
 
 ## 2. Stack Teknis
 
-| Lapisan       | Teknologi                                                                     |
-| ------------- | ----------------------------------------------------------------------------- |
-| Monorepo      | **npm workspaces** (`apps/*`, `packages/*`) + folder `workers/` (Python)      |
-| Frontend      | **React 18 + TypeScript + Vite**, React Router, TanStack Query, CSS Modules   |
-| Backend lokal | **Node.js LTS + TypeScript + Fastify**, zod, pino (logger bawaan Fastify)     |
-| Shared        | `packages/shared`: zod schema, tipe, konstanta default                        |
-| Worker        | **Python 3.10/3.11**: demucs, DeepFilterNet, OpenCV, Norfair, numpy           |
-| CLI eksternal | yt-dlp, whisper.cpp (`whisper-cli`), ffmpeg/ffprobe                           |
+| Lapisan        | Teknologi                                                                     |
+| -------------- | ----------------------------------------------------------------------------- |
+| Monorepo       | **npm workspaces** (`apps/*`, `packages/*`) + folder `workers/` (Python)      |
+| Frontend       | **React 18 + TypeScript + Vite**, React Router, TanStack Query, CSS Modules   |
+| Backend lokal  | **Node.js LTS + TypeScript + Fastify**, zod, pino (logger bawaan Fastify)     |
+| Shared         | `packages/shared`: zod schema, tipe, konstanta default                        |
+| Worker         | **Python 3.10/3.11**: demucs, DeepFilterNet, OpenCV, Norfair, numpy           |
+| CLI eksternal  | yt-dlp, whisper.cpp (`whisper-cli`), ffmpeg/ffprobe                           |
 | Layanan online | Groq API (opsional, free tier) untuk transkrip cepat; fallback whisper.cpp    |
-| Render        | **ffmpeg + subtitle ASS** (libass) — editly diganti, lihat CLAUDE.md bagian 2 |
-| Persistensi   | File JSON per job di `workspace/<jobId>/job.json`, **tanpa database**         |
-| Test          | Vitest, Testing Library, pytest                                               |
-| Kualitas      | ESLint (flat config), Prettier, ruff, `tsc --noEmit`                          |
-| UI skill      | hallmark, make-interfaces-feel-better, stageshow (lihat CLAUDE.md)            |
+| Render         | **ffmpeg + subtitle ASS** (libass) — editly diganti, lihat CLAUDE.md bagian 2 |
+| Persistensi    | File JSON per job di `workspace/<jobId>/job.json`, **tanpa database**         |
+| Test           | Vitest, Testing Library, pytest                                               |
+| Kualitas       | ESLint (flat config), Prettier, ruff, `tsc --noEmit`                          |
+| UI skill       | hallmark, make-interfaces-feel-better, stageshow (lihat CLAUDE.md)            |
 
 ---
 

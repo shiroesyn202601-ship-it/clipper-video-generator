@@ -7,7 +7,7 @@ import {
   type CaptionPresetId,
   type CaptionStyle,
 } from "@clipper/shared";
-import { useEffect, type CSSProperties } from "react";
+import { useEffect, useId, type CSSProperties, type ReactNode } from "react";
 import { Button } from "../../components/ui/Button.tsx";
 import { api } from "../../lib/api.ts";
 import { copy } from "../../lib/copy.ts";
@@ -103,6 +103,38 @@ function Preview({ style }: { style: CaptionStyle }) {
   );
 }
 
+/** Slider with its label and current value on one row above it. */
+function RangeField(props: {
+  label: string;
+  display: ReactNode;
+  min: number;
+  max: number;
+  step: number;
+  value: number;
+  onChange: (value: number) => void;
+}) {
+  const id = useId();
+  return (
+    <div className={styles.field}>
+      <span className={styles.labelRow}>
+        <label htmlFor={id} className={styles.label}>
+          {props.label}
+        </label>
+        <span className={styles.value}>{props.display}</span>
+      </span>
+      <input
+        id={id}
+        type="range"
+        min={props.min}
+        max={props.max}
+        step={props.step}
+        value={props.value}
+        onChange={(event) => props.onChange(Number(event.target.value))}
+      />
+    </div>
+  );
+}
+
 /** Preset picker plus detailed controls for the burned-in captions of one clip. */
 export function CaptionStyleEditor({
   value,
@@ -165,20 +197,15 @@ export function CaptionStyleEditor({
               </select>
             </label>
 
-            <label className={styles.field}>
-              <span className={styles.labelRow}>
-                <span className={styles.label}>{text.fontSize}</span>
-                <span className={styles.value}>{value.fontSize}</span>
-              </span>
-              <input
-                type="range"
-                min={32}
-                max={160}
-                step={2}
-                value={value.fontSize}
-                onChange={(event) => set("fontSize", Number(event.target.value))}
-              />
-            </label>
+            <RangeField
+              label={text.fontSize}
+              display={value.fontSize}
+              min={32}
+              max={160}
+              step={2}
+              value={value.fontSize}
+              onChange={(next) => set("fontSize", next)}
+            />
 
             <label className={styles.field}>
               <span className={styles.label}>{text.highlightMode}</span>
@@ -233,35 +260,25 @@ export function CaptionStyleEditor({
               ))}
             </div>
 
-            <label className={styles.field}>
-              <span className={styles.labelRow}>
-                <span className={styles.label}>{text.outlineWidth}</span>
-                <span className={styles.value}>{value.outlineWidth}</span>
-              </span>
-              <input
-                type="range"
-                min={0}
-                max={16}
-                step={1}
-                value={value.outlineWidth}
-                onChange={(event) => set("outlineWidth", Number(event.target.value))}
-              />
-            </label>
+            <RangeField
+              label={text.outlineWidth}
+              display={value.outlineWidth}
+              min={0}
+              max={16}
+              step={1}
+              value={value.outlineWidth}
+              onChange={(next) => set("outlineWidth", next)}
+            />
 
-            <label className={styles.field}>
-              <span className={styles.labelRow}>
-                <span className={styles.label}>{text.positionY}</span>
-                <span className={styles.value}>{text.positionValue(value.positionY)}</span>
-              </span>
-              <input
-                type="range"
-                min={10}
-                max={90}
-                step={1}
-                value={value.positionY}
-                onChange={(event) => set("positionY", Number(event.target.value))}
-              />
-            </label>
+            <RangeField
+              label={text.positionY}
+              display={text.positionValue(value.positionY)}
+              min={10}
+              max={90}
+              step={1}
+              value={value.positionY}
+              onChange={(next) => set("positionY", next)}
+            />
 
             <div className={styles.checks}>
               {(
@@ -292,20 +309,15 @@ export function CaptionStyleEditor({
                   />
                   <span>{text.boxColor}</span>
                 </label>
-                <label className={styles.field}>
-                  <span className={styles.labelRow}>
-                    <span className={styles.label}>{text.boxOpacity}</span>
-                    <span className={styles.value}>{Math.round(value.boxOpacity * 100)}%</span>
-                  </span>
-                  <input
-                    type="range"
-                    min={0}
-                    max={100}
-                    step={5}
-                    value={Math.round(value.boxOpacity * 100)}
-                    onChange={(event) => set("boxOpacity", Number(event.target.value) / 100)}
-                  />
-                </label>
+                <RangeField
+                  label={text.boxOpacity}
+                  display={`${Math.round(value.boxOpacity * 100)}%`}
+                  min={0}
+                  max={100}
+                  step={5}
+                  value={Math.round(value.boxOpacity * 100)}
+                  onChange={(next) => set("boxOpacity", next / 100)}
+                />
               </div>
             )}
           </fieldset>

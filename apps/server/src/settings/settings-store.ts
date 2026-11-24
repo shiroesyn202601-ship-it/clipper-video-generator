@@ -1,9 +1,5 @@
 import path from "node:path";
-import {
-  appSettingsSchema,
-  type AppSettings,
-  type UpdateAppSettingsBody,
-} from "@clipper/shared";
+import { appSettingsSchema, type AppSettings, type UpdateAppSettingsBody } from "@clipper/shared";
 import type { FastifyBaseLogger } from "fastify";
 import { readJson, writeJsonAtomic } from "../lib/fs-utils.ts";
 
