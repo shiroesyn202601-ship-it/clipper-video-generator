@@ -2,7 +2,9 @@ import path from "node:path";
 import {
   createJobBodySchema,
   jobSettingsInputSchema,
+  candidatesFileSchema,
   transcriptSchema,
+  type CandidatesFile,
   type Transcript,
   type Job,
   type JobEvent,
@@ -89,6 +91,11 @@ export function registerJobRoutes(
   app.get("/jobs/:id/transcript", async (request): Promise<Transcript> => {
     const { id } = parseInput(jobParamsSchema, request.params);
     return service.readArtifact(id, "transcript", transcriptSchema);
+  });
+
+  app.get("/jobs/:id/candidates", async (request): Promise<CandidatesFile> => {
+    const { id } = parseInput(jobParamsSchema, request.params);
+    return service.readArtifact(id, "candidates", candidatesFileSchema);
   });
 
   app.get("/jobs/:id/transcript.vtt", async (request, reply) => {

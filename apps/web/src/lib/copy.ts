@@ -90,6 +90,19 @@ export const copy = {
     notYet: "Transkrip muncul setelah tahap Transkrip selesai.",
     empty: "Tidak ada ucapan yang terdeteksi di video ini.",
   },
+  candidates: {
+    title: "Kandidat klip",
+    notYet: "Kandidat klip muncul setelah tahap Cari momen selesai.",
+    empty:
+      "Tidak ada bagian yang cocok dengan durasi klip yang diminta. Coba ubah durasi minimal/maksimal di job baru.",
+    duration: (seconds: number) => `${seconds} detik`,
+    scoreLabel: "skor dari 100",
+    scoreHint:
+      "Skor 0–100 dari pembuka, energi suara, tempo, jeda, kelengkapan kalimat, durasi, dan kejelasan ucapan",
+    reasonsLabel: "Alasan skor",
+    preview: "Pratinjau",
+    previewing: "Memutar…",
+  },
   jobStatus: {
     queued: "Antre",
     analyzing: "Diproses",

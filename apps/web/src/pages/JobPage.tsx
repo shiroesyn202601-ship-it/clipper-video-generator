@@ -1,8 +1,15 @@
-import { ANALYSIS_STAGE_IDS, analysisProgress, type Job } from "@clipper/shared";
+import {
+  ANALYSIS_STAGE_IDS,
+  analysisProgress,
+  type ClipCandidate,
+  type Job,
+} from "@clipper/shared";
 import { useCallback, useRef, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { ProgressBar } from "../components/ui/ProgressBar.tsx";
 import { Tabs, type TabItem } from "../components/ui/Tabs.tsx";
+import { CandidateList } from "../features/candidates/CandidateList.tsx";
+import { useCandidates } from "../features/candidates/use-candidates.ts";
 import { JobHeader } from "../features/jobs/JobHeader.tsx";
 import { SourcePlayer } from "../features/jobs/SourcePlayer.tsx";
 import { StageList } from "../features/jobs/StageList.tsx";
@@ -14,7 +21,7 @@ import { copy } from "../lib/copy.ts";
 import { toPercent } from "../lib/format.ts";
 import styles from "./JobPage.module.css";
 
-type PanelId = "transcript";
+type PanelId = "candidates" | "transcript";
 
 export function JobPage() {
   const { jobId = "" } = useParams();
@@ -40,9 +47,12 @@ export function JobPage() {
 function JobView({ job, onDeleted }: { job: Job; onDeleted: () => void }) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const [currentTimeSec, setCurrentTimeSec] = useState(0);
-  const [panel, setPanel] = useState<PanelId>("transcript");
   const hasTranscript = job.stages.transcribe.status === "done";
+  const hasCandidates = job.stages["find-moments"].status === "done";
+  const [panel, setPanel] = useState<PanelId>(hasCandidates ? "candidates" : "transcript");
+  const [preview, setPreview] = useState<ClipCandidate | null>(null);
   const transcript = useTranscript(job.id, hasTranscript);
+  const candidates = useCandidates(job.id, hasCandidates);
   const isActive = job.status === "queued" || job.status === "analyzing";
   const progress = analysisProgress(job);
   const sourcePath = job.stages.download.status === "done" ? job.artifacts.sourceVideo : undefined;
@@ -54,7 +64,38 @@ function JobView({ job, onDeleted }: { job: Job; onDeleted: () => void }) {
     void video.play().catch(() => undefined);
   };
 
+  const handleTimeUpdate = (timeSec: number): void => {
+    setCurrentTimeSec(timeSec);
+    if (preview && timeSec >= preview.endSec) {
+      videoRef.current?.pause();
+      setPreview(null);
+    }
+  };
+
+  const startPreview = (candidate: ClipCandidate): void => {
+    setPreview(candidate);
+    seek(candidate.startSec);
+  };
+
   const panels: TabItem<PanelId>[] = [
+    {
+      id: "candidates",
+      label: copy.candidates.title,
+      ...(candidates.data ? { badge: String(candidates.data.candidates.length) } : {}),
+      content: !hasCandidates ? (
+        <p className={styles.muted}>{copy.candidates.notYet}</p>
+      ) : candidates.isPending ? (
+        <p className={styles.muted}>{copy.common.loading}</p>
+      ) : candidates.isError ? (
+        <p role="alert">{errorText(candidates.error)}</p>
+      ) : (
+        <CandidateList
+          candidates={candidates.data.candidates}
+          previewingId={preview?.id ?? null}
+          onPreview={startPreview}
+        />
+      ),
+    },
     {
       id: "transcript",
       label: copy.transcript.title,
@@ -103,7 +144,7 @@ function JobView({ job, onDeleted }: { job: Job; onDeleted: () => void }) {
               hasTranscript={hasTranscript}
               language={job.settings.language}
               videoRef={videoRef}
-              onTimeUpdate={setCurrentTimeSec}
+              onTimeUpdate={handleTimeUpdate}
             />
             {stages}
           </div>

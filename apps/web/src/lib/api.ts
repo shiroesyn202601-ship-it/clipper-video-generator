@@ -2,7 +2,9 @@ import {
   healthReportSchema,
   jobSchema,
   jobSummarySchema,
+  candidatesFileSchema,
   transcriptSchema,
+  type CandidatesFile,
   type Transcript,
   type CreateJobBody,
   type HealthReport,
@@ -106,6 +108,12 @@ export const api = {
   getTranscript: (jobId: string, signal?: AbortSignal): Promise<Transcript> =>
     request(`/jobs/${encodeURIComponent(jobId)}/transcript`, {
       schema: transcriptSchema,
+      ...(signal ? { signal } : {}),
+    }),
+
+  getCandidates: (jobId: string, signal?: AbortSignal): Promise<CandidatesFile> =>
+    request(`/jobs/${encodeURIComponent(jobId)}/candidates`, {
+      schema: candidatesFileSchema,
       ...(signal ? { signal } : {}),
     }),
 

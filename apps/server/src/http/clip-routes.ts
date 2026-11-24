@@ -1,0 +1,41 @@
+import { createClipBodySchema, updateClipBodySchema, type Clip } from "@clipper/shared";
+import type { FastifyInstance } from "fastify";
+import { z } from "zod";
+import type { ClipService } from "../jobs/clip-service.ts";
+import { parseInput } from "./validate.ts";
+
+const jobParamsSchema = z.object({ id: z.string().uuid() });
+const clipParamsSchema = z.object({ id: z.string().uuid(), clipId: z.string().uuid() });
+
+export function registerClipRoutes(app: FastifyInstance, deps: { clips: ClipService }): void {
+  const { clips } = deps;
+
+  app.post("/jobs/:id/clips", async (request, reply): Promise<Clip> => {
+    const { id } = parseInput(jobParamsSchema, request.params);
+    const body = parseInput(createClipBodySchema, request.body);
+    return reply.status(201).send(await clips.create(id, body));
+  });
+
+  app.patch("/jobs/:id/clips/:clipId", async (request): Promise<Clip> => {
+    const { id, clipId } = parseInput(clipParamsSchema, request.params);
+    const body = parseInput(updateClipBodySchema, request.body);
+    return clips.update(id, clipId, body);
+  });
+
+  app.post("/jobs/:id/clips/:clipId/render", async (request): Promise<Clip> => {
+    const { id, clipId } = parseInput(clipParamsSchema, request.params);
+    return clips.render(id, clipId);
+  });
+
+  app.post("/jobs/:id/clips/:clipId/cancel", async (request, reply) => {
+    const { id, clipId } = parseInput(clipParamsSchema, request.params);
+    await clips.cancel(id, clipId);
+    return reply.status(204).send();
+  });
+
+  app.delete("/jobs/:id/clips/:clipId", async (request, reply) => {
+    const { id, clipId } = parseInput(clipParamsSchema, request.params);
+    await clips.delete(id, clipId);
+    return reply.status(204).send();
+  });
+}

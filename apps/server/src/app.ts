@@ -4,8 +4,10 @@ import fastifyMultipart from "@fastify/multipart";
 import fastifyStatic from "@fastify/static";
 import Fastify, { type FastifyInstance } from "fastify";
 import type { Config } from "./config.ts";
+import { registerClipRoutes } from "./http/clip-routes.ts";
 import { registerHealthRoutes } from "./http/health-routes.ts";
 import { registerJobRoutes } from "./http/job-routes.ts";
+import { ClipService } from "./jobs/clip-service.ts";
 import { JobQueue } from "./jobs/job-queue.ts";
 import { JobService } from "./jobs/job-service.ts";
 import { JobStore } from "./jobs/job-store.ts";
@@ -59,11 +61,13 @@ export async function buildApp(config: Config): Promise<FastifyInstance> {
   });
   const queue = new JobQueue(runTask, app.log);
   const service = new JobService(store, queue);
+  const clips = new ClipService(store, queue, service);
 
   await app.register(
     (api, _options, done) => {
       registerHealthRoutes(api, config);
       registerJobRoutes(api, { service, store });
+      registerClipRoutes(api, { clips });
       done();
     },
     { prefix: "/api" },

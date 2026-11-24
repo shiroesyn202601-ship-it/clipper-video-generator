@@ -1,0 +1,66 @@
+/**
+ * Word lists for moment scoring (lower case). Phrases are matched on word boundaries.
+ * Extend these lists to tune which openings count as a "hook".
+ */
+export const HOOK_PHRASES = [
+  // Indonesian
+  "kenapa",
+  "mengapa",
+  "bagaimana",
+  "gimana",
+  "rahasia",
+  "jangan",
+  "ternyata",
+  "masalahnya",
+  "faktanya",
+  "sebenarnya",
+  "jujur",
+  "bayangkan",
+  "pernah nggak",
+  "pernah gak",
+  "tahu nggak",
+  "tau gak",
+  "kesalahan",
+  "terbesar",
+  "paling",
+  "penting",
+  "serius",
+  "gila",
+  "intinya",
+  "yang orang nggak tahu",
+  // English
+  "why",
+  "how",
+  "secret",
+  "never",
+  "nobody",
+  "the truth",
+  "the problem",
+  "mistake",
+  "imagine",
+  "biggest",
+  "most people",
+  "here's",
+  "what if",
+  "stop",
+] as const;
+
+/** A clip that starts or ends on one of these words is probably mid-thought. */
+export const CONJUNCTIONS = [
+  "dan",
+  "tapi",
+  "jadi",
+  "karena",
+  "terus",
+  "atau",
+  "yang",
+  "kalau",
+  "sama",
+  "bahwa",
+  "and",
+  "but",
+  "so",
+  "because",
+  "or",
+  "that",
+] as const;
