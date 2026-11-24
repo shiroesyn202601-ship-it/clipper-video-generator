@@ -2,6 +2,8 @@ import { jobEventSchema, type Job, type JobSettings, type JobSummary } from "@cl
 import { useMutation, useQuery, useQueryClient, type QueryClient } from "@tanstack/react-query";
 import { useEffect } from "react";
 import { api } from "../../lib/api.ts";
+import { showNotification } from "../../lib/notify.ts";
+import { jobNotices } from "./job-notices.ts";
 
 export const jobKeys = {
   all: ["jobs"] as const,
@@ -48,7 +50,10 @@ export function useJobEvents(jobId: string, onDeleted?: () => void): void {
       const parsed = jobEventSchema.safeParse(JSON.parse(message.data));
       if (!parsed.success) return;
       if (parsed.data.type === "job-update") {
-        storeJob(queryClient, parsed.data.job);
+        const next = parsed.data.job;
+        const previous = queryClient.getQueryData<Job>(jobKeys.detail(next.id));
+        storeJob(queryClient, next);
+        jobNotices(previous, next).forEach(showNotification);
       } else {
         queryClient.removeQueries({ queryKey: jobKeys.detail(jobId) });
         void queryClient.invalidateQueries({ queryKey: jobKeys.all });

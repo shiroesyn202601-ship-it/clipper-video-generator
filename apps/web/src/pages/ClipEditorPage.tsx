@@ -31,6 +31,7 @@ import { useTranscript } from "../features/transcript/use-transcript.ts";
 import { api, errorText } from "../lib/api.ts";
 import { copy } from "../lib/copy.ts";
 import { toPercent } from "../lib/format.ts";
+import { requestNotificationPermission } from "../lib/notify.ts";
 import styles from "./ClipEditorPage.module.css";
 
 export function ClipEditorPage() {
@@ -89,6 +90,7 @@ function ClipEditor({ job, clip, number, onDeleted }: ClipEditorProps) {
   const sourcePath = job.artifacts.sourceVideo;
 
   const handleRender = (): void => {
+    requestNotificationPermission();
     if (!draftCaptions) {
       render.mutate();
       return;

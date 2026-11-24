@@ -7,6 +7,7 @@ import { ProgressBar } from "../../components/ui/ProgressBar.tsx";
 import { errorText } from "../../lib/api.ts";
 import { copy } from "../../lib/copy.ts";
 import { toPercent } from "../../lib/format.ts";
+import { requestNotificationPermission } from "../../lib/notify.ts";
 import { useCreateJob, useUploadJob } from "./job-queries.ts";
 import styles from "./NewJobForm.module.css";
 import { SettingsFields } from "./SettingsFields.tsx";
@@ -46,6 +47,8 @@ export function NewJobForm() {
 
   const handleSubmit = (event: FormEvent<HTMLFormElement>): void => {
     event.preventDefault();
+    // Asked here because browsers only show the prompt after a user action.
+    requestNotificationPermission();
     const openJob = (jobId: string): void => navigate(`/jobs/${jobId}`);
     if (file) {
       setValidationError(null);

@@ -155,6 +155,14 @@ export const copy = {
     failed: "Gagal",
     cancelled: "Dibatalkan",
   } satisfies Record<JobStatus, string>,
+  notifications: {
+    untitled: "Podcast tanpa judul",
+    transcribed: "Transkrip selesai",
+    ready: "Klip siap dipilih",
+    failed: "Job gagal",
+    rendered: "Klip selesai dirender",
+    renderFailed: "Render klip gagal",
+  },
   stageStatus: {
     pending: "Menunggu",
     running: "Berjalan",

@@ -349,6 +349,7 @@ Saat membangun halaman, jalankan skill **hallmark** (`/hallmark`). Setelahnya, r
    - Pengaturan lanjutan dalam panel yang bisa dilipat: bahasa, durasi klip, jumlah kandidat, denoise, transkrip online (Groq), volume musik.
    - Di bawahnya, daftar job terakhir: judul, durasi, status, waktu dibuat.
    - Banner peringatan jika `/health` melaporkan ada tool yang hilang.
+   - Klik **Proses** / **Render** meminta izin notifikasi browser. Selama tab job terbuka, pop-up desktop (Notification API; toast Windows di Chrome/Edge) muncul saat transkrip selesai, job siap atau gagal, dan render klip selesai atau gagal (`features/jobs/job-notices.ts`).
 
 2. **Detail job** (`/jobs/:id`)
    - Header: judul, durasi, sumber, tombol Batalkan / Ulangi / Hapus.
