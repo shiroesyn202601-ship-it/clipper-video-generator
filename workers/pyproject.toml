@@ -1,0 +1,16 @@
+[project]
+name = "clipper-workers"
+version = "0.0.0"
+description = "Python workers for the podcast clipper pipeline (demucs, DeepFilterNet, OpenCV, Norfair)"
+requires-python = ">=3.10,<3.12"
+
+[tool.ruff]
+line-length = 100
+target-version = "py310"
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "N", "UP", "B", "SIM", "RUF", "T20"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]

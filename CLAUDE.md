@@ -34,31 +34,31 @@ Aplikasi berjalan **sepenuhnya di komputer lokal**. Tidak ada server cloud, tida
 
 ## 2. Tools & Library (Stack Resmi)
 
-| # | Kebutuhan | Tool | Repo |
-|---|-----------|------|------|
-| 1 | Bahasa / framework aplikasi | **React** (UI) | https://react.dev |
-| 2 | Ambil video sumber | **yt-dlp** | https://github.com/yt-dlp/yt-dlp |
-| 3 | Transkrip & cari momen | **whisper.cpp** | https://github.com/ggml-org/whisper.cpp |
-| 4 | Bersihkan suara dari noise | **DeepFilterNet** | https://github.com/rikorose/deepfilternet |
-| 5 | Pisahkan suara dari musik | **Demucs** | https://github.com/facebookresearch/demucs |
-| 6 | Kunci wajah & auto-crop 9:16 | **OpenCV** + **Norfair** | https://github.com/opencv/opencv · https://github.com/tryolabs/norfair |
-| 7 | Susun subtitle + render | **editly** | https://github.com/mifi/editly |
-| 8 | UI anti "AI slop" | **hallmark** (agent skill) | https://github.com/nutlope/hallmark |
-| 9 | Beresin detail kecil UI | **make-interfaces-feel-better** (agent skill) | https://github.com/jakubkrehel/make-interfaces-feel-better |
-| 10 | Finishing UI | **benjitaylor/skills** (skill *stageshow*) | https://github.com/benjitaylor/skills |
+| #   | Kebutuhan                    | Tool                                          | Repo                                                                   |
+| --- | ---------------------------- | --------------------------------------------- | ---------------------------------------------------------------------- |
+| 1   | Bahasa / framework aplikasi  | **React** (UI)                                | https://react.dev                                                      |
+| 2   | Ambil video sumber           | **yt-dlp**                                    | https://github.com/yt-dlp/yt-dlp                                       |
+| 3   | Transkrip & cari momen       | **whisper.cpp**                               | https://github.com/ggml-org/whisper.cpp                                |
+| 4   | Bersihkan suara dari noise   | **DeepFilterNet**                             | https://github.com/rikorose/deepfilternet                              |
+| 5   | Pisahkan suara dari musik    | **Demucs**                                    | https://github.com/facebookresearch/demucs                             |
+| 6   | Kunci wajah & auto-crop 9:16 | **OpenCV** + **Norfair**                      | https://github.com/opencv/opencv · https://github.com/tryolabs/norfair |
+| 7   | Susun subtitle + render      | **editly**                                    | https://github.com/mifi/editly                                         |
+| 8   | UI anti "AI slop"            | **hallmark** (agent skill)                    | https://github.com/nutlope/hallmark                                    |
+| 9   | Beresin detail kecil UI      | **make-interfaces-feel-better** (agent skill) | https://github.com/jakubkrehel/make-interfaces-feel-better             |
+| 10  | Finishing UI                 | **benjitaylor/skills** (skill _stageshow_)    | https://github.com/benjitaylor/skills                                  |
 
 Pendukung wajib: **Node.js LTS**, **Python 3.10+**, **ffmpeg + ffprobe** di PATH, **Git**.
 
 ### Library pendukung yang disetujui
 
-| Area | Library |
-|------|---------|
-| Frontend | Vite, TypeScript, React Router, TanStack Query, CSS Modules |
-| Backend | Fastify (+ pino bawaan), zod, `@fastify/multipart`, `@fastify/static` |
-| Shared | zod |
-| Python worker | numpy (selain demucs, deepfilternet, opencv-python, norfair, yt-dlp) |
+| Area            | Library                                                                                            |
+| --------------- | -------------------------------------------------------------------------------------------------- |
+| Frontend        | Vite, TypeScript, React Router, TanStack Query, CSS Modules                                        |
+| Backend         | Fastify (+ pino bawaan), zod, `@fastify/multipart`, `@fastify/static`                              |
+| Shared          | zod                                                                                                |
+| Python worker   | numpy (selain demucs, deepfilternet, opencv-python, norfair, yt-dlp)                               |
 | Kualitas & test | ESLint (typescript-eslint, react-hooks, jsx-a11y), Prettier, Vitest, Testing Library, ruff, pytest |
-| Model | YuNet face detector (`face_detection_yunet_2023mar.onnx`, OpenCV Zoo) |
+| Model           | YuNet face detector (`face_detection_yunet_2023mar.onnx`, OpenCV Zoo)                              |
 
 ### Arsitektur yang disepakati
 
@@ -75,7 +75,7 @@ Kalau arsitektur ini perlu diubah, update bagian ini **dan** `SETUP.md` dalam co
 ## 3. Aturan Proses Kerja (WAJIB)
 
 1. **Setiap perubahan kode atas perintah user langsung di-commit & di-push** ke `origin` (GitHub).
-   - Satu perintah = minimal satu commit yang jelas. Pesan commit menjelaskan *apa* dan *kenapa*.
+   - Satu perintah = minimal satu commit yang jelas. Pesan commit menjelaskan _apa_ dan _kenapa_.
    - Push ke branch aktif segera setelah commit. Jangan menumpuk perubahan yang belum di-push.
    - Jangan commit file rahasia (`.env`, token, cookie yt-dlp, kredensial).
 2. **Panduan setup harus selalu benar.** Setiap perubahan yang berpotensi mengubah cara setup
@@ -94,6 +94,7 @@ Kalau arsitektur ini perlu diubah, update bagian ini **dan** `SETUP.md` dalam co
 ## 4. Yang HARUS Dilakukan
 
 ### Umum
+
 - Gunakan **React** untuk seluruh UI. Gunakan **TypeScript** untuk kode JS/TS baru.
 - Pakai tool sesuai fungsinya di bagian 2 — jangan menulis ulang fungsi yang sudah disediakan tool tersebut.
 - Setiap tahap pipeline berdiri sendiri: input jelas (path file) → output jelas (path file / JSON) → bisa dijalankan ulang tanpa mengulang tahap sebelumnya (pakai cache di `workspace/<job-id>/`).
@@ -104,12 +105,14 @@ Kalau arsitektur ini perlu diubah, update bagian ini **dan** `SETUP.md` dalam co
 - Konfigurasi (path binary, model whisper, port) diletakkan di file `.env` / config, dengan contoh di `.env.example`.
 
 ### Fitur podcast
+
 - Prioritaskan kualitas suara: pisahkan vokal (demucs) dan bersihkan noise (DeepFilterNet) **sebelum** transkrip, agar transkrip lebih akurat.
 - Pencarian momen memakai hasil transkrip whisper.cpp yang ber-timestamp; klip harus mulai & berakhir di batas kalimat, bukan memotong kata.
 - Crop 9:16 mengikuti wajah pembicara yang sedang aktif (OpenCV untuk deteksi, Norfair untuk tracking), dengan pergerakan kamera yang halus (smoothing), bukan melompat-lompat.
 - Subtitle diambil dari timestamp transkrip; mudah dibaca di layar HP (ukuran besar, kontras tinggi, maksimal ±2 baris).
 
 ### UI / UX
+
 - Saat membangun atau mendesain ulang halaman, gunakan skill **hallmark** (`/hallmark`, `/hallmark redesign`, `/hallmark audit`).
 - Untuk merapikan detail, ikuti prinsip **make-interfaces-feel-better**, antara lain:
   - radius konsentris (radius luar = radius dalam + padding);
@@ -124,6 +127,7 @@ Kalau arsitektur ini perlu diubah, update bagian ini **dan** `SETUP.md` dalam co
 ## 5. Yang HARUS Dihindari
 
 ### Umum
+
 - ❌ Menambah framework UI selain React (Vue, Svelte, Angular, dll.).
 - ❌ Menambah library/tool baru di luar bagian 2 tanpa persetujuan user.
 - ❌ Mengirim video, audio, atau transkrip ke layanan cloud/API pihak ketiga. Semua proses **lokal**.
@@ -136,6 +140,7 @@ Kalau arsitektur ini perlu diubah, update bagian ini **dan** `SETUP.md` dalam co
 - ❌ Hardcode path absolut milik satu komputer (mis. `D:\Berdikari\...`).
 
 ### UI ("AI slop" yang dilarang — mengacu ke hallmark)
+
 - ❌ Label kecil huruf kapital (eyebrow) di atas setiap judul.
 - ❌ Satu kata berwarna mencolok di tengah judul sebagai gimmick.
 - ❌ Gradien ungu-biru generik, kartu-kartu kosong, ikon dekoratif tanpa fungsi.

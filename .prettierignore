@@ -1,0 +1,7 @@
+node_modules
+dist
+workspace
+tools
+.venv
+package-lock.json
+workers

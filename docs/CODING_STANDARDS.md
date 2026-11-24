@@ -6,6 +6,7 @@ Tujuannya: siapa pun yang melanjutkan project di kemudian hari menulis code deng
 Urutan prioritas jika ada konflik: **CLAUDE.md → CODING_STANDARDS.md → PROMPT_GENERATE_APP.md → selera pribadi.**
 
 Kata kunci:
+
 - **WAJIB** = tidak boleh dilanggar. Pelanggaran dianggap bug.
 - **DIANJURKAN** = default. Boleh menyimpang hanya dengan alasan yang ditulis di komentar atau di pesan commit.
 - **DILARANG** = tidak boleh ada di codebase.
@@ -26,26 +27,27 @@ Kata kunci:
 ## 2. Bahasa & Penamaan
 
 ### Bahasa
+
 - **Code** (nama variabel, fungsi, file, tipe, komentar teknis) WAJIB dalam **bahasa Inggris**.
 - **Teks yang dilihat user** (label UI, pesan error di UI) dalam **bahasa Indonesia**, dan dikumpulkan di `apps/web/src/lib/copy.ts`. Jangan menyebar string UI di banyak komponen.
 - **Dokumentasi** (`*.md`) dalam bahasa Indonesia.
 
 ### Konvensi nama
 
-| Hal | Format | Contoh |
-|-----|--------|--------|
-| File komponen React | `PascalCase.tsx` | `ClipCard.tsx` |
-| File non-komponen TS | `kebab-case.ts` | `job-store.ts` |
-| File Python | `snake_case.py` | `face_track.py` |
-| Folder | `kebab-case` | `clip-review/` |
-| Komponen, tipe, interface, class | `PascalCase` | `JobStatus`, `ClipCandidate` |
-| Fungsi & variabel (TS) | `camelCase` | `findMoments()` |
-| Fungsi & variabel (Python) | `snake_case` | `track_faces()` |
-| Konstanta global | `UPPER_SNAKE_CASE` | `MAX_CLIP_SECONDS` |
-| Boolean | awali `is/has/can/should` | `isRendering`, `hasFace` |
-| Event handler React | `handleX` (di dalam), `onX` (prop) | `handleSubmit`, `onSubmit` |
-| Custom hook | `useX` | `useJobProgress` |
-| ID stage pipeline | `kebab-case` string literal | `"separate-vocals"` |
+| Hal                              | Format                             | Contoh                       |
+| -------------------------------- | ---------------------------------- | ---------------------------- |
+| File komponen React              | `PascalCase.tsx`                   | `ClipCard.tsx`               |
+| File non-komponen TS             | `kebab-case.ts`                    | `job-store.ts`               |
+| File Python                      | `snake_case.py`                    | `face_track.py`              |
+| Folder                           | `kebab-case`                       | `clip-review/`               |
+| Komponen, tipe, interface, class | `PascalCase`                       | `JobStatus`, `ClipCandidate` |
+| Fungsi & variabel (TS)           | `camelCase`                        | `findMoments()`              |
+| Fungsi & variabel (Python)       | `snake_case`                       | `track_faces()`              |
+| Konstanta global                 | `UPPER_SNAKE_CASE`                 | `MAX_CLIP_SECONDS`           |
+| Boolean                          | awali `is/has/can/should`          | `isRendering`, `hasFace`     |
+| Event handler React              | `handleX` (di dalam), `onX` (prop) | `handleSubmit`, `onSubmit`   |
+| Custom hook                      | `useX`                             | `useJobProgress`             |
+| ID stage pipeline                | `kebab-case` string literal        | `"separate-vocals"`          |
 
 - Satuan WAJIB ditulis di nama jika ada ambiguitas: `durationSec`, `startMs`, `widthPx`, `fileSizeBytes`.
 - **Waktu internal selalu dalam detik (float) dengan nama berakhiran `Sec`.** Konversi ke ms/frame hanya di tepi sistem (saat memanggil tool).
@@ -56,10 +58,15 @@ Kata kunci:
 ## 3. TypeScript (web & server)
 
 ### Konfigurasi
+
 - `strict: true`, `noUncheckedIndexedAccess: true`, `noImplicitOverride: true`, `exactOptionalPropertyTypes: true`.
-- Modul: **ESM** (`"type": "module"`). Import relatif menyertakan ekstensi `.js` di server (NodeNext).
+- Modul: **ESM** (`"type": "module"`). Import relatif **selalu menyertakan ekstensi `.ts`/`.tsx`**
+  (`import { config } from "./config.ts"`). Server dijalankan langsung oleh Node (type stripping, Node ≥ 22.18)
+  tanpa langkah build, jadi hanya sintaks TS yang bisa dihapus (`erasableSyntaxOnly`): DILARANG `enum`,
+  `namespace`, dan parameter property di constructor.
 
 ### Aturan
+
 - **DILARANG `any`.** Untuk data yang belum diketahui, pakai `unknown` lalu validasi dengan **zod**.
 - **DILARANG** non-null assertion `!` kecuali ada komentar alasannya.
 - **DILARANG** `@ts-ignore`. Kalau terpaksa, pakai `@ts-expect-error` dengan komentar alasan.
@@ -67,8 +74,17 @@ Kata kunci:
 - Tipe yang dipakai bersama web dan server ditaruh di **`packages/shared`**, berupa **zod schema** + tipe hasil `z.infer`. Jangan menulis tipe yang sama dua kali.
 - Union string literal lebih disukai daripada `enum`:
   ```ts
-  export const STAGE_IDS = ["download", "extract-audio", "separate-vocals", "denoise",
-    "transcribe", "find-moments", "track-faces", "reframe", "render"] as const;
+  export const STAGE_IDS = [
+    "download",
+    "extract-audio",
+    "separate-vocals",
+    "denoise",
+    "transcribe",
+    "find-moments",
+    "track-faces",
+    "reframe",
+    "render",
+  ] as const;
   export type StageId = (typeof STAGE_IDS)[number];
   ```
 - Fungsi publik (di-export) WAJIB punya tipe return eksplisit.
@@ -80,6 +96,7 @@ Kata kunci:
 - DILARANG `export default`, kecuali jika diwajibkan oleh tool (mis. file config Vite). Gunakan named export.
 
 ### Error handling
+
 - Error domain memakai class turunan `AppError` dengan field `code` (string stabil, mis. `"YTDLP_FAILED"`), `message` (bahasa Inggris untuk log), dan `userMessage` (bahasa Indonesia untuk UI).
 - `try/catch` hanya di tempat yang benar-benar bisa menangani atau menambah konteks. Jangan membungkus semua hal.
 - DILARANG `catch (e) {}` kosong.
@@ -89,6 +106,7 @@ Kata kunci:
 ## 4. React (apps/web)
 
 ### Struktur
+
 ```
 apps/web/src/
   app/            # router, provider, layout utama
@@ -98,10 +116,12 @@ apps/web/src/
   lib/            # api client, copy.ts, format.ts, util umum
   styles/         # tokens.css, global.css
 ```
+
 - Satu komponen per file. Nama file = nama komponen.
 - File komponen DIANJURKAN di bawah ±200 baris. Jika lebih, pecah.
 
 ### Pola wajib
+
 - Hanya **function component** + hooks. DILARANG class component.
 - Props diberi tipe `type XProps = {...}` tepat di atas komponen.
 - **Server state** (data dari API) WAJIB lewat **TanStack Query**. DILARANG `useEffect` + `fetch` manual untuk ambil data.
@@ -113,6 +133,7 @@ apps/web/src/
 - Tidak memakai `useMemo`/`useCallback` secara refleks. Pakai hanya jika ada masalah performa yang terukur atau dibutuhkan untuk referential equality.
 
 ### Styling
+
 - **CSS Modules** (`Component.module.css`) + CSS custom properties di `styles/tokens.css`.
 - WAJIB memakai token (warna, spacing, radius, font, durasi animasi). DILARANG hardcode nilai warna atau spacing di komponen.
 - Skala spacing: `4 8 12 16 24 32 48 64` px. Skala radius mengikuti aturan **radius konsentris** (luar = dalam + padding).
@@ -122,6 +143,7 @@ apps/web/src/
 - Ikuti aturan anti-slop di CLAUDE.md bagian 5.
 
 ### Aksesibilitas (WAJIB)
+
 - Elemen interaktif memakai elemen semantik (`button`, `a`, `input`). DILARANG `div` dengan `onClick`.
 - Setiap input punya `label`. Setiap ikon tanpa teks punya `aria-label`.
 - Fokus keyboard terlihat jelas (`:focus-visible`).
@@ -133,6 +155,7 @@ apps/web/src/
 ## 5. Node.js Server (apps/server)
 
 ### Struktur
+
 ```
 apps/server/src/
   index.ts          # bootstrap saja: load config, buat app, listen
@@ -147,6 +170,7 @@ apps/server/src/
 ```
 
 ### Aturan
+
 - **Route tipis.** Route hanya memvalidasi input (zod), memanggil service, lalu mengembalikan response. Logika bisnis tidak boleh ada di route.
 - Semua env dibaca **hanya** di `config.ts`. File lain DILARANG membaca `process.env`.
 - **Proses eksternal WAJIB lewat satu helper `runProcess()`** di `tools/run-process.ts`, yang:
@@ -166,6 +190,7 @@ apps/server/src/
 ## 6. Python Workers (workers/)
 
 ### Struktur
+
 ```
 workers/
   pyproject.toml          # konfigurasi ruff, pytest
@@ -182,6 +207,7 @@ workers/
 ```
 
 ### Kontrak CLI worker (WAJIB sama untuk semua worker)
+
 - Dijalankan sebagai modul: `python -m clipper_workers.<name> --input <path> --output <path> [--opsi]`.
 - Argumen diparse dengan `argparse`. Semua path di-resolve dengan `pathlib.Path`.
 - **stdout hanya berisi JSON Lines**:
@@ -194,6 +220,7 @@ workers/
 - Worker DILARANG memanggil server, membaca state job, atau menulis di luar folder `--output`.
 
 ### Gaya
+
 - Python 3.10+, **type hints wajib** di semua fungsi.
 - Format & lint memakai **ruff** (`ruff format`, `ruff check`). Panjang baris 100.
 - Gunakan `dataclass(frozen=True)` untuk struktur data.
