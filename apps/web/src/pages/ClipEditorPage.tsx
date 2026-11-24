@@ -5,6 +5,7 @@ import {
   splitSentences,
   type Caption,
   type CaptionStyle,
+  type ClipCommentary,
   type Clip,
   type Job,
 } from "@clipper/shared";
@@ -17,11 +18,13 @@ import { ProgressBar } from "../components/ui/ProgressBar.tsx";
 import { StatusBadge } from "../components/ui/StatusBadge.tsx";
 import { CaptionEditor } from "../features/clips/CaptionEditor.tsx";
 import { CaptionStyleEditor } from "../features/clips/CaptionStyleEditor.tsx";
+import { CommentaryEditor } from "../features/clips/CommentaryEditor.tsx";
 import { ClipPreview } from "../features/clips/ClipPreview.tsx";
 import { RangeControls } from "../features/clips/RangeControls.tsx";
 import {
   useCancelClip,
   useDeleteClip,
+  useGenerateCommentary,
   useRenderClip,
   useRevealClip,
   useUpdateClip,
@@ -82,6 +85,8 @@ function ClipEditor({ job, clip, number, onDeleted }: ClipEditorProps) {
   /** undefined = unchanged; null = back to the legacy look. */
   const [draftStyle, setDraftStyle] = useState<CaptionStyle | null | undefined>(undefined);
   const [draftUseBrand, setDraftUseBrand] = useState<boolean | undefined>(undefined);
+  const [draftCommentary, setDraftCommentary] = useState<ClipCommentary | undefined>(undefined);
+  const generateCommentary = useGenerateCommentary(job.id, clip.id);
   const settings = useAppSettings();
   const saveSettings = useUpdateAppSettings();
   const [isConfirmingDelete, setIsConfirmingDelete] = useState(false);
@@ -94,8 +99,12 @@ function ClipEditor({ job, clip, number, onDeleted }: ClipEditorProps) {
     JSON.stringify(settings.data?.defaultCaptionStyle ?? null) === JSON.stringify(captionStyle);
   const useBrand = draftUseBrand ?? clip.useBrand;
   const isBrandEnabled = settings.data?.brand.enabled === true;
+  const commentary = draftCommentary ?? clip.commentary;
   const isDirty =
-    draftCaptions !== null || draftStyle !== undefined || draftUseBrand !== undefined;
+    draftCaptions !== null ||
+    draftStyle !== undefined ||
+    draftUseBrand !== undefined ||
+    draftCommentary !== undefined;
   const sentences = useMemo(
     () => (transcript.data ? splitSentences(transcript.data) : []),
     [transcript.data],
@@ -106,13 +115,15 @@ function ClipEditor({ job, clip, number, onDeleted }: ClipEditorProps) {
     cancel.error ??
     remove.error ??
     reveal.error ??
-    saveSettings.error;
+    saveSettings.error ??
+    generateCommentary.error;
   const sourcePath = job.artifacts.sourceVideo;
 
   const discardDrafts = (): void => {
     setDraftCaptions(null);
     setDraftStyle(undefined);
     setDraftUseBrand(undefined);
+    setDraftCommentary(undefined);
   };
 
   const handleRender = (): void => {
@@ -126,6 +137,7 @@ function ClipEditor({ job, clip, number, onDeleted }: ClipEditorProps) {
         ...(draftCaptions ? { captions: draftCaptions } : {}),
         ...(draftStyle !== undefined ? { captionStyle: draftStyle } : {}),
         ...(draftUseBrand !== undefined ? { useBrand: draftUseBrand } : {}),
+        ...(draftCommentary !== undefined ? { commentary: draftCommentary } : {}),
       },
       {
         onSuccess: () => {
@@ -205,6 +217,24 @@ function ClipEditor({ job, clip, number, onDeleted }: ClipEditorProps) {
               isSavingDefault={saveSettings.isPending}
               onChange={setDraftStyle}
               onSaveDefault={(style) => saveSettings.mutate({ defaultCaptionStyle: style })}
+            />
+          </section>
+
+          <section className={styles.section} aria-labelledby="commentary-title">
+            <h2 id="commentary-title" className={styles.subtitle}>
+              {copy.commentary.title}
+            </h2>
+            <CommentaryEditor
+              value={commentary}
+              isDisabled={isBusy || generateCommentary.isPending}
+              isGenerating={generateCommentary.isPending}
+              onChange={setDraftCommentary}
+              onGenerate={(persona) =>
+                generateCommentary.mutate(
+                  persona.trim() ? { persona: persona.trim() } : {},
+                  { onSuccess: () => setDraftCommentary(undefined) },
+                )
+              }
             />
           </section>
 

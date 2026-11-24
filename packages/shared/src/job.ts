@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { captionStyleSchema } from "./caption-style.ts";
+import { clipCommentarySchema } from "./commentary.ts";
 import { CLIP_LIMITS, DEFAULT_JOB_SETTINGS } from "./defaults.ts";
 
 export const ANALYSIS_STAGE_IDS = [
@@ -152,6 +153,8 @@ export const clipSchema = z.object({
   captionStyle: captionStyleSchema.nullable().default(null),
   /** Apply the brand kit (logo, overlays, tint) when the kit is enabled. */
   useBrand: z.boolean().default(true),
+  /** AI creator commentary (intro/outro); null = none, as on clips made before it existed. */
+  commentary: clipCommentarySchema.nullable().default(null),
 });
 export type Clip = z.infer<typeof clipSchema>;
 

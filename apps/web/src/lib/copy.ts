@@ -232,6 +232,20 @@ export const copy = {
     useBrand: "Pakai brand kit (logo, overlay) di klip ini",
     brandOff: "Brand kit sedang nonaktif. Atur di halaman Brand kit.",
   },
+  commentary: {
+    title: "Komentar kreator (AI)",
+    intro:
+      "AI menulis komentar pembuka dan penutup dari sudut pandang Anda, lalu dibacakan suara AI di atas frame klip yang diburamkan. Teks dikirim ke Groq, suara dibuat oleh Edge-TTS (Microsoft).",
+    persona: "Gaya bicara Anda (opsional)",
+    personaPlaceholder: "mis. santai, kritis, sedikit humor",
+    generate: "Buat komentar dengan AI",
+    regenerate: "Tulis ulang dengan AI",
+    enabled: "Pakai komentar di klip ini",
+    introLabel: "Pembuka (sebelum klip)",
+    outroLabel: "Penutup (setelah klip)",
+    voice: "Suara",
+    counter: (length: number, max: number) => `${length}/${max}`,
+  },
   jobStatus: {
     queued: "Antre",
     analyzing: "Diproses",

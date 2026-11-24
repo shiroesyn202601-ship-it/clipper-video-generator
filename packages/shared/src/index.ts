@@ -2,6 +2,7 @@ export * from "./api.ts";
 export * from "./app-settings.ts";
 export * from "./brand.ts";
 export * from "./caption-style.ts";
+export * from "./commentary.ts";
 export * from "./defaults.ts";
 export * from "./health.ts";
 export * from "./job.ts";

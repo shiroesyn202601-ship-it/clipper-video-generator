@@ -127,6 +127,7 @@ WHISPER_LANGUAGE=id                           # atau "auto"
 WHISPER_THREADS=4
 GROQ_API_KEYS=                                # opsional, beberapa key dipisah koma
 GROQ_MODEL=whisper-large-v3-turbo
+GROQ_CHAT_MODEL=llama-3.3-70b-versatile          # komentar AI (opsional)
 FONTS_DIR=./tools/fonts                      # font caption (opsional)
 FACE_MODEL=./tools/models/face_detection_yunet_2023mar.onnx
 DEMUCS_MODEL=htdemucs
@@ -350,6 +351,12 @@ Tanpa AI cloud. Algoritma di `apps/server/src/pipeline/moments/` dipecah menjadi
 - Default **nonaktif** dan kosong, jadi render klip lama identik dengan sebelumnya. `Clip.useBrand` (default `true`) memungkinkan tiap klip mematikannya.
 - Logo: 9 posisi, lebar %, opasitas, margin. Overlay (maks. 8): PNG/JPG/WEBP/GIF/MP4/WEBM/MOV, posisi termasuk layar penuh, tampil sepanjang klip / hanya di awal / hanya di akhir (N detik), opsi hapus latar hijau (`colorkey`). Tint: warna + opasitas, dari bawah/atas/keduanya/rata, jangkauan %.
 - Render (`pipeline/brand/brand-filter.ts` + `stages/render.ts`): bila brand aktif, `-vf` diganti `-filter_complex`: tint (PNG dari `lavfi color` + `geq`, `clips/<id>/tint.png`) di bawah subtitle, lalu `ass`, lalu overlay dan logo di atasnya. File brand yang sudah terhapus dari disk dilewati.
+
+### 7.13 Komentar kreator AI (opsional, kompatibel mundur)
+
+- `Clip.commentary` (`packages/shared/src/commentary.ts`): `{ enabled, intro (maks. 160 karakter), outro (maks. 280), voice }`, default `null` untuk klip lama → render tidak berubah.
+- `POST /api/jobs/:id/clips/:clipId/commentary` (`{ persona? }`): transkrip klip + judul dikirim ke Groq chat (`groqChatJson`, `response_format: json_object`, rotasi key yang sama dengan transkrip). Prompt di `pipeline/commentary/plan.ts`: pembuka ≤14 kata tanpa spoiler, penutup ≤28 kata berisi opini + satu pertanyaan, tanpa fakta karangan. Hasil disimpan ke klip; user bisa mengedit teks dan memilih suara (Ardi/Gadis).
+- Render (`pipeline/commentary/timeline.ts`): worker `clipper_workers.tts` (Edge-TTS) membuat `commentary/<intro|outro>.mp3` + timestamp per kata; frame pertama/terakhir klip diburamkan & digelapkan sebagai latar; ffmpeg `concat` menyusun `commentary/timeline.mkv` = [pembuka] + klip + [penutup]. Caption komentar dibuat dari timestamp kata TTS, caption klip digeser sepanjang durasi pembuka; lalu render biasa (gaya caption + brand kit) berjalan di atas timeline itu.
 
 ## 8. UI / UX (apps/web)
 

@@ -10,6 +10,7 @@ import { registerHealthRoutes } from "./http/health-routes.ts";
 import { registerJobRoutes } from "./http/job-routes.ts";
 import { registerSettingsRoutes } from "./http/settings-routes.ts";
 import { ClipService } from "./jobs/clip-service.ts";
+import { CommentaryService } from "./jobs/commentary-service.ts";
 import { JobQueue } from "./jobs/job-queue.ts";
 import { JobService } from "./jobs/job-service.ts";
 import { JobStore } from "./jobs/job-store.ts";
@@ -67,12 +68,13 @@ export async function buildApp(config: Config): Promise<FastifyInstance> {
   const queue = new JobQueue(runTask, app.log);
   const service = new JobService(store, queue);
   const clips = new ClipService(store, queue, service, settings);
+  const commentary = new CommentaryService(config, store, service, clips);
 
   await app.register(
     (api, _options, done) => {
       registerHealthRoutes(api, config);
       registerJobRoutes(api, { service, store });
-      registerClipRoutes(api, { clips });
+      registerClipRoutes(api, { clips, commentary });
       registerSettingsRoutes(api, { config, settings });
       registerBrandRoutes(api, { brandDir: config.brandDir });
       done();

@@ -1,15 +1,24 @@
-import { createClipBodySchema, updateClipBodySchema, type Clip } from "@clipper/shared";
+import {
+  createClipBodySchema,
+  generateCommentaryBodySchema,
+  updateClipBodySchema,
+  type Clip,
+} from "@clipper/shared";
 import type { FastifyInstance } from "fastify";
 import { z } from "zod";
 import type { ClipService } from "../jobs/clip-service.ts";
+import type { CommentaryService } from "../jobs/commentary-service.ts";
 import { revealInFileManager } from "../tools/reveal.ts";
 import { parseInput } from "./validate.ts";
 
 const jobParamsSchema = z.object({ id: z.string().uuid() });
 const clipParamsSchema = z.object({ id: z.string().uuid(), clipId: z.string().uuid() });
 
-export function registerClipRoutes(app: FastifyInstance, deps: { clips: ClipService }): void {
-  const { clips } = deps;
+export function registerClipRoutes(
+  app: FastifyInstance,
+  deps: { clips: ClipService; commentary: CommentaryService },
+): void {
+  const { clips, commentary } = deps;
 
   app.post("/jobs/:id/clips", async (request, reply): Promise<Clip> => {
     const { id } = parseInput(jobParamsSchema, request.params);
@@ -21,6 +30,13 @@ export function registerClipRoutes(app: FastifyInstance, deps: { clips: ClipServ
     const { id, clipId } = parseInput(clipParamsSchema, request.params);
     const body = parseInput(updateClipBodySchema, request.body);
     return clips.update(id, clipId, body);
+  });
+
+  /** Writes the AI creator commentary (Groq chat) and stores it on the clip for editing. */
+  app.post("/jobs/:id/clips/:clipId/commentary", async (request): Promise<Clip> => {
+    const { id, clipId } = parseInput(clipParamsSchema, request.params);
+    const body = parseInput(generateCommentaryBodySchema, request.body ?? {});
+    return commentary.generate(id, clipId, body);
   });
 
   app.post("/jobs/:id/clips/:clipId/render", async (request): Promise<Clip> => {

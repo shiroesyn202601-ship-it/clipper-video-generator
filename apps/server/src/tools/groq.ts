@@ -1,5 +1,6 @@
 import { readFile } from "node:fs/promises";
 import path from "node:path";
+import { z } from "zod";
 import { AppError, errorMessage, isAbortError } from "../lib/errors.ts";
 
 /** Wait this long before reusing a rate-limited key when Groq gives no retry-after. */
@@ -113,26 +114,36 @@ function sleep(ms: number, signal: AbortSignal): Promise<void> {
   });
 }
 
-/**
- * Sends one audio file to Groq's OpenAI-compatible transcription endpoint and returns the
- * parsed `verbose_json` body (word + segment timestamps). Rotates keys on rate limits.
- */
-export async function transcribeWithGroq(options: {
+type GroqRequestOptions = {
   pool: GroqKeyPool;
-  baseUrl: string;
-  model: string;
-  filePath: string;
-  /** ISO 639-1 code, or "auto" to let Whisper detect it. */
-  language: string;
   signal: AbortSignal;
   log: (line: string) => Promise<void>;
-  /** Injected in tests. */
-  fetchImpl?: typeof fetch;
-}): Promise<unknown> {
-  const { pool, signal, log } = options;
-  const fetchImpl = options.fetchImpl ?? fetch;
-  const audio = await readFile(options.filePath);
-  const fileName = path.basename(options.filePath);
+  /** Short name for logs (file name, "commentary"). */
+  label: string;
+  /** User-facing word for what was rejected on a 4xx, e.g. "audio". */
+  subject: string;
+  /** Sends the request with one key; must honour the given signal. */
+  send: (key: string, signal: AbortSignal) => Promise<Response>;
+};
+
+/** Seconds until the first exhausted Groq limit resets (audio, tokens, or requests). */
+function cooldownMs(headers: Headers): number {
+  return (
+    parseRetryAfter(headers.get("retry-after")) ??
+    parseRetryAfter(headers.get("x-ratelimit-reset-audio-seconds")) ??
+    parseRetryAfter(headers.get("x-ratelimit-reset-tokens")) ??
+    parseRetryAfter(headers.get("x-ratelimit-reset-requests")) ??
+    DEFAULT_COOLDOWN_MS
+  );
+}
+
+/**
+ * Runs one Groq API call with key rotation: 429 parks the key until its limit resets and
+ * tries the next one, 401/403 drops the key, 5xx and network errors retry with backoff.
+ * Returns the parsed JSON body of the first successful response.
+ */
+async function requestWithRotation(options: GroqRequestOptions): Promise<unknown> {
+  const { pool, signal, log, label } = options;
   let lastProblem = "unknown error";
 
   for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt += 1) {
@@ -159,51 +170,36 @@ export async function transcribeWithGroq(options: {
     }
 
     const key = pick.key;
-    const form = new FormData();
-    form.append("file", new Blob([new Uint8Array(audio)]), fileName);
-    form.append("model", options.model);
-    form.append("response_format", "verbose_json");
-    form.append("timestamp_granularities[]", "word");
-    form.append("timestamp_granularities[]", "segment");
-    form.append("temperature", "0");
-    if (options.language !== "auto") form.append("language", options.language);
-
     let response: Response;
     try {
-      response = await fetchImpl(`${options.baseUrl}/audio/transcriptions`, {
-        method: "POST",
-        headers: { Authorization: `Bearer ${key}` },
-        body: form,
-        signal: AbortSignal.any([signal, AbortSignal.timeout(REQUEST_TIMEOUT_MS)]),
-      });
+      response = await options.send(
+        key,
+        AbortSignal.any([signal, AbortSignal.timeout(REQUEST_TIMEOUT_MS)]),
+      );
     } catch (error) {
       if (signal.aborted) throw error;
       lastProblem = isAbortError(error) ? "request timed out" : errorMessage(error);
-      await log(`[groq] ${fileName} key ${maskKey(key)}: network error: ${lastProblem}`);
+      await log(`[groq] ${label} key ${maskKey(key)}: network error: ${lastProblem}`);
       await sleep(Math.min(2000 * attempt, 10_000), signal);
       continue;
     }
 
     if (response.ok) {
-      await log(`[groq] ${fileName} transcribed with key ${maskKey(key)}`);
+      await log(`[groq] ${label} done with key ${maskKey(key)}`);
       const body: unknown = await response.json();
       return body;
     }
 
     const body = (await response.text().catch(() => "")).slice(0, 300);
     lastProblem = `HTTP ${response.status}: ${body}`;
-    await log(`[groq] ${fileName} key ${maskKey(key)}: ${lastProblem}`);
+    await log(`[groq] ${label} key ${maskKey(key)}: ${lastProblem}`);
 
     if (response.status === 401 || response.status === 403) {
       pool.reject(key);
       continue;
     }
     if (response.status === 429) {
-      const wait =
-        parseRetryAfter(response.headers.get("retry-after")) ??
-        parseRetryAfter(response.headers.get("x-ratelimit-reset-audio-seconds")) ??
-        DEFAULT_COOLDOWN_MS;
-      pool.coolDown(key, wait);
+      pool.coolDown(key, cooldownMs(response.headers));
       continue;
     }
     if (response.status >= 500) {
@@ -213,8 +209,8 @@ export async function transcribeWithGroq(options: {
     // 400 / 413 and similar: retrying with another key will not help.
     throw groqError(
       "GROQ_REQUEST_FAILED",
-      `Groq rejected ${fileName}: ${lastProblem}`,
-      `Groq menolak audio (HTTP ${response.status})`,
+      `Groq rejected ${label}: ${lastProblem}`,
+      `Groq menolak ${options.subject} (HTTP ${response.status})`,
     );
   }
 
@@ -223,4 +219,106 @@ export async function transcribeWithGroq(options: {
     `Groq failed after ${MAX_ATTEMPTS} attempts: ${lastProblem}`,
     "Groq tidak bisa dihubungi",
   );
+}
+
+/**
+ * Sends one audio file to Groq's OpenAI-compatible transcription endpoint and returns the
+ * parsed `verbose_json` body (word + segment timestamps).
+ */
+export async function transcribeWithGroq(options: {
+  pool: GroqKeyPool;
+  baseUrl: string;
+  model: string;
+  filePath: string;
+  /** ISO 639-1 code, or "auto" to let Whisper detect it. */
+  language: string;
+  signal: AbortSignal;
+  log: (line: string) => Promise<void>;
+  /** Injected in tests. */
+  fetchImpl?: typeof fetch;
+}): Promise<unknown> {
+  const fetchImpl = options.fetchImpl ?? fetch;
+  const audio = await readFile(options.filePath);
+  const fileName = path.basename(options.filePath);
+  return requestWithRotation({
+    pool: options.pool,
+    signal: options.signal,
+    log: options.log,
+    label: fileName,
+    subject: "audio",
+    send: (key, signal) => {
+      const form = new FormData();
+      form.append("file", new Blob([new Uint8Array(audio)]), fileName);
+      form.append("model", options.model);
+      form.append("response_format", "verbose_json");
+      form.append("timestamp_granularities[]", "word");
+      form.append("timestamp_granularities[]", "segment");
+      form.append("temperature", "0");
+      if (options.language !== "auto") form.append("language", options.language);
+      return fetchImpl(`${options.baseUrl}/audio/transcriptions`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${key}` },
+        body: form,
+        signal,
+      });
+    },
+  });
+}
+
+const chatResponseSchema = z.object({
+  choices: z
+    .array(z.object({ message: z.object({ content: z.string().nullable() }) }))
+    .min(1),
+});
+
+/**
+ * Asks a Groq chat model for a JSON object (response_format json_object) and returns it
+ * parsed. The prompt must mention JSON, as the API requires.
+ */
+export async function groqChatJson(options: {
+  pool: GroqKeyPool;
+  baseUrl: string;
+  model: string;
+  system: string;
+  user: string;
+  temperature: number;
+  signal: AbortSignal;
+  log: (line: string) => Promise<void>;
+  fetchImpl?: typeof fetch;
+}): Promise<unknown> {
+  const fetchImpl = options.fetchImpl ?? fetch;
+  const body = await requestWithRotation({
+    pool: options.pool,
+    signal: options.signal,
+    log: options.log,
+    label: "chat",
+    subject: "permintaan AI",
+    send: (key, signal) =>
+      fetchImpl(`${options.baseUrl}/chat/completions`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json" },
+        body: JSON.stringify({
+          model: options.model,
+          temperature: options.temperature,
+          response_format: { type: "json_object" },
+          messages: [
+            { role: "system", content: options.system },
+            { role: "user", content: options.user },
+          ],
+        }),
+        signal,
+      }),
+  });
+  const content = chatResponseSchema.parse(body).choices[0]?.message.content ?? "";
+  try {
+    const parsed: unknown = JSON.parse(content);
+    return parsed;
+  } catch (error) {
+    throw groqError(
+      "GROQ_BAD_JSON",
+      `Groq chat returned invalid JSON: ${content.slice(0, 200)}`,
+      "Jawaban AI tidak bisa dibaca. Coba lagi.",
+      error,
+    );
+  }
 }

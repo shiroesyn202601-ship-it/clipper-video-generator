@@ -167,6 +167,16 @@ curl -L -o tools/models/face_detection_yunet_2023mar.onnx https://github.com/ope
 
 ---
 
+## 4c. (Opsional) Komentar kreator otomatis (Groq + Edge-TTS)
+
+Fitur **Komentar kreator (AI)** di editor klip menulis komentar pembuka dan penutup, lalu membacakannya dengan suara AI.
+
+- Teks ditulis oleh model chat Groq (`GROQ_CHAT_MODEL`, default `llama-3.3-70b-versatile`), memakai `GROQ_API_KEYS` dari langkah 4b. Transkrip klip dan judul video dikirim ke Groq.
+- Suara dibuat oleh **Edge-TTS** (layanan suara online Microsoft, gratis). Paket `edge-tts` sudah ada di `workers/requirements.txt`; untuk instalasi lama jalankan ulang `pip install -r workers/requirements.txt` (langkah 3). Teks komentar dikirim ke Microsoft saat render.
+- Butuh internet saat membuat komentar dan saat merender klip yang memakai komentar. Klip tanpa komentar tidak terpengaruh.
+
+---
+
 ## 5c. (Opsional) Font caption
 
 Dipakai oleh fitur **Gaya caption** di editor klip. Semua font berlisensi bebas (SIL OFL / Apache), boleh dipakai untuk video komersial.
@@ -282,6 +292,7 @@ npm run check:py    # ruff + pytest (Python worker)
 | Halaman putih setelah `npm run build`               | Muat ulang halaman (Ctrl+F5). Server membaca file build per permintaan, jadi tidak perlu restart.                                                                            |
 | Transkrip kurang akurat                             | Pakai model lebih besar (`ggml-large-v3.bin`) lewat `WHISPER_MODEL`, atau set bahasa yang tepat di Pengaturan lanjutan.                                                      |
 | Pop-up Windows tidak muncul saat tahap selesai | Izinkan notifikasi saat browser bertanya (muncul setelah klik **Proses** atau **Render**). Kalau sudah terlanjur diblokir: klik ikon gembok di address bar → Notifikasi → Izinkan. Cek juga Windows Settings → System → Notifications (browser aktif, Do not disturb mati). Tab aplikasi harus tetap terbuka. |
+| Komentar AI gagal dibuat / suara komentar gagal | Pesan "butuh API key Groq": isi `GROQ_API_KEYS`. Suara gagal: cek internet dan `pip install -r workers/requirements.txt` (paket `edge-tts`). Detail ada di `workspace/<job>/logs/commentary.log` dan `workspace/<job>/logs/render.log`. |
 | Transkrip tetap memakai whisper lokal | Lihat pesan di tahap Transkrip dan `workspace/<job>/logs/transcribe.log` (baris `[groq]`). Penyebab umum: `GROQ_API_KEYS` kosong, key salah (401), atau kuota gratis semua key habis (429). Tambah key lain atau tunggu kuota pulih. |
 | Log yt-dlp berisi "n challenge solving failed"      | Deno belum ada di PATH atau paket `yt-dlp-ejs` belum terpasang. Pasang Deno, lalu ulangi `pip install -r workers/requirements.txt`.                                          |
 | `ModuleNotFoundError: torchaudio.backend`           | torchaudio terlalu baru. Ulangi `pip install -r workers/requirements.txt`.                                                                                                   |

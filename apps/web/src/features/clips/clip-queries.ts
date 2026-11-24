@@ -1,4 +1,4 @@
-import type { Clip, Job, UpdateClipBody } from "@clipper/shared";
+import type { Clip, GenerateCommentaryBody, Job, UpdateClipBody } from "@clipper/shared";
 import { useMutation, useQueryClient, type QueryClient } from "@tanstack/react-query";
 import { api } from "../../lib/api.ts";
 import { jobKeys } from "../jobs/job-queries.ts";
@@ -29,6 +29,14 @@ export function useUpdateClip(jobId: string, clipId: string) {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (body: UpdateClipBody) => api.updateClip(jobId, clipId, body),
+    onSuccess: (clip) => storeClip(queryClient, jobId, clip),
+  });
+}
+
+export function useGenerateCommentary(jobId: string, clipId: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (body: GenerateCommentaryBody) => api.generateCommentary(jobId, clipId, body),
     onSuccess: (clip) => storeClip(queryClient, jobId, clip),
   });
 }

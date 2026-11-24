@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { captionStyleSchema } from "./caption-style.ts";
+import { clipCommentarySchema } from "./commentary.ts";
 import { captionSchema, jobSchema } from "./job.ts";
 
 /** Settings sent by the client: every field optional, server applies defaults. */
@@ -42,6 +43,7 @@ export const updateClipBodySchema = z
     captions: z.array(captionSchema).max(500),
     captionStyle: captionStyleSchema.nullable(),
     useBrand: z.boolean(),
+    commentary: clipCommentarySchema.nullable(),
   })
   .partial();
 export type UpdateClipBody = z.infer<typeof updateClipBodySchema>;

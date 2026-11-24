@@ -34,6 +34,8 @@ const envSchema = z.object({
   /** Comma-separated Groq API keys (free tier). Empty = transcribe locally only. */
   GROQ_API_KEYS: z.string().default(""),
   GROQ_MODEL: z.string().default("whisper-large-v3-turbo"),
+  /** Groq chat model that writes the AI commentary (free tier). */
+  GROQ_CHAT_MODEL: z.string().default("llama-3.3-70b-versatile"),
 });
 
 /** "a, b,,c" → ["a", "b", "c"] (duplicates removed). */
@@ -77,6 +79,7 @@ function loadConfig() {
     groq: Object.freeze({
       apiKeys: Object.freeze(parseApiKeys(env.GROQ_API_KEYS)),
       model: env.GROQ_MODEL,
+      chatModel: env.GROQ_CHAT_MODEL,
       baseUrl: "https://api.groq.com/openai/v1",
     }),
     workersDir: path.join(REPO_ROOT, "workers"),

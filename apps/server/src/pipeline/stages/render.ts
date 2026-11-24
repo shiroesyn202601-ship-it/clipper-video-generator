@@ -4,6 +4,7 @@ import path from "node:path";
 import {
   CAPTION_FONTS,
   RENDER_SETTINGS,
+  hasCommentary,
   isBrandActive,
   type BrandKit,
   type CaptionStyle,
@@ -16,6 +17,7 @@ import { readAppSettings } from "../../settings/settings-store.ts";
 import { buildBrandGraph, tintFilterExpression } from "../brand/brand-filter.ts";
 import { buildAss } from "../captions/ass.ts";
 import { buildStyledAss } from "../captions/styled-ass.ts";
+import { buildCommentaryTimeline } from "../commentary/timeline.ts";
 import type { ClipStage, ClipStageContext } from "../stage.ts";
 
 /** Allowed difference between the rendered and the requested clip length (seconds). */
@@ -130,13 +132,30 @@ export const renderStage: ClipStage = {
   run: async (context) => {
     const job = context.job();
     const clip = context.clip();
-    const durationSec = clip.endSec - clip.startSec;
+    let durationSec = clip.endSec - clip.startSec;
+    let videoInput = "reframed.mp4";
+    let audioInput = "audio.wav";
+    let captions = clip.captions;
+    // Commentary (intro/outro) turns the clip into a longer timeline; without it the inputs
+    // are the same as before the feature existed.
+    if (hasCommentary(clip.commentary)) {
+      const timeline = await buildCommentaryTimeline(
+        context,
+        clip.commentary,
+        clip.captions,
+        durationSec,
+      );
+      videoInput = timeline.file;
+      audioInput = timeline.file;
+      captions = timeline.captions;
+      durationSec = timeline.durationSec;
+    }
 
     const size = { width: RENDER_SETTINGS.width, height: RENDER_SETTINGS.height };
     // Clips without a caption style keep the legacy look, so older clips render unchanged.
     const ass = clip.captionStyle
-      ? buildStyledAss(clip.captions, { style: clip.captionStyle, ...size })
-      : buildAss(clip.captions, { style: job.settings.subtitleStyle, ...size });
+      ? buildStyledAss(captions, { style: clip.captionStyle, ...size })
+      : buildAss(captions, { style: job.settings.subtitleStyle, ...size });
     const fontOption = clip.captionStyle
       ? await prepareFont(context.config, clip.captionStyle, context.clipDir, context.logFile)
       : "";
@@ -160,9 +179,9 @@ export const renderStage: ClipStage = {
       cwd: context.clipDir,
       args: [
         "-i",
-        "reframed.mp4",
+        videoInput,
         "-i",
-        "audio.wav",
+        audioInput,
         ...videoArgs,
         "-r",
         String(RENDER_SETTINGS.fps),

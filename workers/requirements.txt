@@ -8,6 +8,8 @@ deepfilternet==0.5.6
 opencv-python==4.10.0.84
 norfair==2.2.0
 soundfile==0.12.1
+# Commentary voice (Microsoft Edge online TTS, free). Optional: only the commentary feature needs it.
+edge-tts>=7.0,<8
 # yt-dlp is intentionally unpinned: YouTube changes often and old versions break.
 # [default] adds yt-dlp-ejs, the JS challenge solver YouTube now requires (needs Deno, see SETUP.md).
 yt-dlp[default]
