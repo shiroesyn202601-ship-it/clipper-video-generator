@@ -8,5 +8,10 @@ type StatusBadgeProps = {
 };
 
 export function StatusBadge({ tone, label }: StatusBadgeProps) {
-  return <span className={`${styles.badge} ${styles[tone]}`}>{label}</span>;
+  return (
+    <span className={`${styles.badge} ${styles[tone]}`}>
+      {tone === "active" && <span className={styles.dot} aria-hidden="true" />}
+      {label}
+    </span>
+  );
 }

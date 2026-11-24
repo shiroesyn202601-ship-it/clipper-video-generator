@@ -1,4 +1,5 @@
 .track {
+  position: relative;
   height: 4px;
   overflow: hidden;
   border-radius: var(--radius-pill);
@@ -9,6 +10,23 @@
   height: 100%;
   transform-origin: left center;
   transition: transform var(--duration-base) var(--ease-out);
+}
+
+/* A soft highlight sweeping across the whole track: shows work is ongoing even when the percent stalls. */
+.sheen {
+  position: absolute;
+  inset: 0;
+  width: 40%;
+  background: linear-gradient(90deg, transparent, rgb(255 255 255 / 0.35), transparent);
+  transform: translateX(-100%);
+  animation: sweep 1.6s ease-in-out infinite;
+  pointer-events: none;
+}
+
+@keyframes sweep {
+  to {
+    transform: translateX(250%);
+  }
 }
 
 .accent {
@@ -25,4 +43,11 @@
 
 .muted {
   background: var(--color-border-strong);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sheen {
+    animation: none;
+    display: none;
+  }
 }
