@@ -6,7 +6,13 @@ import {
   type JobSettings,
   type Transcript,
 } from "@clipper/shared";
-import { buildEnergyIndex, computeFeatures, FEATURE_NAMES, type Features } from "./features.ts";
+import {
+  buildEnergyIndex,
+  computeFeatures,
+  FEATURE_NAMES,
+  type FeatureName,
+  type Features,
+} from "./features.ts";
 import { splitSentences, type Sentence } from "@clipper/shared";
 
 const REASONS: Record<keyof Features, (features: Features) => string> = {
@@ -19,6 +25,33 @@ const REASONS: Record<keyof Features, (features: Features) => string> = {
   durationFit: () => "Durasi mendekati target",
   confidence: () => "Ucapan terdengar jelas",
 };
+
+/** Mean value of every feature across a set of windows. */
+export function featureMeans(all: readonly Features[]): Features {
+  const means = Object.fromEntries(FEATURE_NAMES.map((name) => [name, 0])) as Features;
+  if (all.length === 0) return means;
+  for (const name of FEATURE_NAMES) {
+    means[name] = all.reduce((sum, features) => sum + features[name], 0) / all.length;
+  }
+  return means;
+}
+
+/**
+ * At most MOMENT_TUNING.maxReasons reasons, chosen to tell candidates apart: passing features
+ * ranked by how far they sit above the other candidates' mean (weighted). A hook always leads,
+ * because it is what makes a clip worth watching. Without `means`, ranks by contribution.
+ */
+export function topReasons(features: Features, means?: Features): string[] {
+  const distinctiveness = (name: FeatureName): number =>
+    MOMENT_WEIGHTS[name] * (features[name] - (means ? means[name] : 0));
+  return FEATURE_NAMES.filter((name) => features[name] >= MOMENT_TUNING.reasonThreshold)
+    .sort((a, b) => {
+      if (a === "hook" || b === "hook") return a === "hook" ? -1 : 1;
+      return distinctiveness(b) - distinctiveness(a);
+    })
+    .slice(0, MOMENT_TUNING.maxReasons)
+    .map((name) => REASONS[name](features));
+}
 
 export type Window = { sentences: Sentence[]; startSec: number; endSec: number };
 
@@ -91,16 +124,16 @@ export function findMoments(
     return { ...window, features, score: scoreFeatures(features) };
   });
 
-  return selectNonOverlapping(scored, settings.maxCandidates).map((window) => ({
+  const selected = selectNonOverlapping(scored, settings.maxCandidates);
+  const means = featureMeans(selected.map((window) => window.features));
+  return selected.map((window) => ({
     // Deterministic id: the same input always yields the same candidate ids.
     id: `m${Math.round(window.startSec * 10)}-${Math.round(window.endSec * 10)}`,
     startSec: window.startSec,
     endSec: window.endSec,
     text: window.sentences.map((sentence) => sentence.text).join(" "),
     score: window.score,
-    reasons: FEATURE_NAMES.filter(
-      (name) => window.features[name] >= MOMENT_TUNING.reasonThreshold,
-    ).map((name) => REASONS[name](window.features)),
+    reasons: topReasons(window.features, means),
     features: Object.fromEntries(
       FEATURE_NAMES.map((name) => [name, Math.round(window.features[name] * 1000) / 1000]),
     ),

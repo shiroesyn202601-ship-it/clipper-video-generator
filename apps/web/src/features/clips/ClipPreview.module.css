@@ -10,7 +10,9 @@
   height: min(72vh, 720px);
   aspect-ratio: 9 / 16;
   border-radius: var(--radius-md);
-  background: #000;
+  background: var(--color-media);
+  outline: 1px solid var(--color-media-outline);
+  outline-offset: -1px;
 }
 
 .sourceWrap {
@@ -22,7 +24,9 @@
   width: 100%;
   aspect-ratio: 16 / 9;
   border-radius: var(--radius-lg);
-  background: #000;
+  background: var(--color-media);
+  outline: 1px solid var(--color-media-outline);
+  outline-offset: -1px;
 }
 
 .note {

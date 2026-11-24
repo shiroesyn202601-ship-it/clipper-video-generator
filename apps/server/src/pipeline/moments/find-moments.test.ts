@@ -12,6 +12,7 @@ import {
   generateWindows,
   scoreFeatures,
   selectNonOverlapping,
+  topReasons,
 } from "./find-moments.ts";
 import { splitSentences } from "@clipper/shared";
 
@@ -108,6 +109,31 @@ describe("computeFeatures", () => {
     expect(computeFeatures(loud, energy, settings).energy).toBeGreaterThan(
       computeFeatures(quiet, energy, settings).energy,
     );
+  });
+});
+
+describe("topReasons", () => {
+  const strong = {
+    hook: 1,
+    energy: 0.9,
+    speechDensity: 1,
+    silence: 1,
+    completeness: 1,
+    durationFit: 1,
+    confidence: 0.2,
+  };
+
+  it("keeps at most three passing features, hook first", () => {
+    const reasons = topReasons(strong);
+    expect(reasons).toHaveLength(3);
+    expect(reasons[0]).toBe("Dibuka dengan pertanyaan");
+    expect(reasons).not.toContain("Ucapan terdengar jelas");
+  });
+
+  it("prefers what sets the candidate apart from the others", () => {
+    // Everyone has perfect pacing and complete sentences; only this one is loud.
+    const means = { ...strong, energy: 0.4 };
+    expect(topReasons(strong, means)[1]).toBe("Energi suara tinggi");
   });
 });
 

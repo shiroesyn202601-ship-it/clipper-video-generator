@@ -38,3 +38,7 @@ Thumbs.db
 .vscode/
 .idea/
 .claude/settings.local.json
+
+# Agent skills are third-party code installed per machine (SETUP.md step 7);
+# skills-lock.json pins the reviewed versions.
+/.claude/skills/

@@ -5,3 +5,5 @@ tools
 .venv
 package-lock.json
 workers
+.claude
+skills-lock.json

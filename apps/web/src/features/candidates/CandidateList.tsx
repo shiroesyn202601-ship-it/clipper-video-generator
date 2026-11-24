@@ -34,14 +34,13 @@ export function CandidateList({
               <span className={styles.rank}>#{index + 1}</span>
               <span className={styles.range}>
                 {formatDuration(candidate.startSec)}–{formatDuration(candidate.endSec)}
-                <span className={styles.duration}>
-                  {" · "}
-                  {copy.candidates.duration(Math.round(duration))}
-                </span>
+              </span>
+              <span className={styles.duration}>
+                {copy.candidates.duration(Math.round(duration))}
               </span>
               <span className={styles.score} title={copy.candidates.scoreHint}>
+                <span className={styles.scoreLabel}>{copy.candidates.scoreShort}</span>
                 {Math.round(candidate.score)}
-                <span className="visually-hidden"> {copy.candidates.scoreLabel}</span>
               </span>
             </div>
             <p className={styles.text}>{candidate.text}</p>

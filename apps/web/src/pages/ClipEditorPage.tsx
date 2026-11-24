@@ -11,6 +11,7 @@ import { useMemo, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { Button } from "../components/ui/Button.tsx";
 import { ConfirmDialog } from "../components/ui/ConfirmDialog.tsx";
+import { Icon } from "../components/ui/Icon.tsx";
 import { ProgressBar } from "../components/ui/ProgressBar.tsx";
 import { StatusBadge } from "../components/ui/StatusBadge.tsx";
 import { CaptionEditor } from "../features/clips/CaptionEditor.tsx";
@@ -106,7 +107,8 @@ function ClipEditor({ job, clip, number, onDeleted }: ClipEditorProps) {
   return (
     <div className={styles.page}>
       <Link to={`/jobs/${job.id}`} className={styles.back}>
-        ← {copy.clipEditor.back}
+        <Icon name="chevron-left" />
+        {copy.clipEditor.back}
       </Link>
       <header className={styles.header}>
         <h1 className={styles.title}>{copy.clips.name(number)}</h1>
@@ -119,9 +121,10 @@ function ClipEditor({ job, clip, number, onDeleted }: ClipEditorProps) {
                 href={api.mediaUrl(job.id, clip.output)}
                 download={`clip-${number}.mp4`}
               >
+                <Icon name="download" />
                 {copy.clipEditor.download}
               </a>
-              <Button variant="ghost" onClick={() => reveal.mutate()}>
+              <Button variant="ghost" icon={<Icon name="folder" />} onClick={() => reveal.mutate()}>
                 {copy.clipEditor.reveal}
               </Button>
             </>

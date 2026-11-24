@@ -35,7 +35,7 @@
 .navLink {
   display: inline-flex;
   align-items: center;
-  min-height: 36px;
+  min-height: var(--hit-min);
   padding: 0 var(--space-3);
   border-radius: var(--radius-sm);
   color: var(--color-text-muted);

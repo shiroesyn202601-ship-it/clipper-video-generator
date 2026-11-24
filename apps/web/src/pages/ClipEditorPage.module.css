@@ -7,6 +7,8 @@
   justify-self: start;
   display: inline-flex;
   align-items: center;
+  gap: var(--space-1);
+  margin-left: calc(-1 * var(--space-1));
   min-height: var(--hit-min);
   color: var(--color-text-muted);
   font-size: var(--text-sm);
@@ -37,6 +39,7 @@
 .download {
   display: inline-flex;
   align-items: center;
+  gap: var(--space-2);
   min-height: var(--hit-min);
   padding: 0 var(--space-4);
   border-radius: var(--radius-md);

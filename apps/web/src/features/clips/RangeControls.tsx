@@ -1,4 +1,5 @@
 import { Button } from "../../components/ui/Button.tsx";
+import { Icon } from "../../components/ui/Icon.tsx";
 import { copy } from "../../lib/copy.ts";
 import { formatTimestamp } from "../../lib/format.ts";
 import styles from "./RangeControls.module.css";
@@ -63,7 +64,7 @@ export function RangeControls({
         disabled={isDisabled || back === null}
         onClick={() => back !== null && apply(back)}
       >
-        ←
+        <Icon name="chevron-left" />
       </Button>
       <span className={styles.value}>{formatTimestamp(value)}</span>
       <Button
@@ -72,7 +73,7 @@ export function RangeControls({
         disabled={isDisabled || forward === null}
         onClick={() => forward !== null && apply(forward)}
       >
-        →
+        <Icon name="chevron-right" />
       </Button>
     </div>
   );

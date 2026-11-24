@@ -11,16 +11,9 @@ export function ToolList({ tools }: ToolListProps) {
     <ul className={styles.list}>
       {tools.map((tool) => (
         <li key={tool.id} className={styles.item}>
-          <span
-            className={tool.isAvailable ? styles.dotOk : styles.dotMissing}
-            aria-hidden="true"
-          />
-          <span className={styles.label}>
-            {tool.label}
-            <span className="visually-hidden">
-              {" — "}
-              {tool.isAvailable ? copy.health.available : copy.health.missing}
-            </span>
+          <span className={styles.label}>{tool.label}</span>
+          <span className={tool.isAvailable ? styles.ok : styles.missing}>
+            {tool.isAvailable ? copy.health.available : copy.health.missing}
           </span>
           <span className={styles.meta}>
             {tool.isAvailable

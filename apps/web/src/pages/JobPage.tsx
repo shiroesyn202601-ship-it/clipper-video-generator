@@ -6,6 +6,7 @@ import {
 } from "@clipper/shared";
 import { useCallback, useRef, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
+import { Icon } from "../components/ui/Icon.tsx";
 import { ProgressBar } from "../components/ui/ProgressBar.tsx";
 import { Tabs, type TabItem } from "../components/ui/Tabs.tsx";
 import { CandidateList } from "../features/candidates/CandidateList.tsx";
@@ -20,7 +21,7 @@ import { TranscriptPanel } from "../features/transcript/TranscriptPanel.tsx";
 import { useTranscript } from "../features/transcript/use-transcript.ts";
 import { errorText } from "../lib/api.ts";
 import { copy } from "../lib/copy.ts";
-import { toPercent } from "../lib/format.ts";
+import { elapsedSec, formatDuration, toPercent } from "../lib/format.ts";
 import styles from "./JobPage.module.css";
 
 type PanelId = "candidates" | "clips" | "transcript";
@@ -130,23 +131,36 @@ function JobView({ job, onDeleted }: { job: Job; onDeleted: () => void }) {
     },
   ];
 
-  const stages = (
-    <section className={styles.section} aria-labelledby="stages-title">
-      <div className={styles.sectionHead}>
-        <h2 id="stages-title" className={styles.subtitle}>
-          {copy.job.stagesTitle}
-        </h2>
-        {isActive && <span className={styles.num}>{copy.job.progress(toPercent(progress))}</span>}
-      </div>
-      {isActive && <ProgressBar value={progress} label={copy.job.stagesTitle} />}
-      <StageList stages={ANALYSIS_STAGE_IDS.map((id) => ({ id, state: job.stages[id] }))} />
-    </section>
+  const stageList = (
+    <StageList stages={ANALYSIS_STAGE_IDS.map((id) => ({ id, state: job.stages[id] }))} />
   );
+  // Once analysis is over the stages are history: fold them away so the candidates lead.
+  const stages =
+    job.status === "ready" ? (
+      <details className={styles.stagesDone}>
+        <summary className={styles.stagesSummary}>
+          {copy.job.stagesDone(formatDuration(totalAnalysisSec(job)))}
+        </summary>
+        {stageList}
+      </details>
+    ) : (
+      <section className={styles.section} aria-labelledby="stages-title">
+        <div className={styles.sectionHead}>
+          <h2 id="stages-title" className={styles.subtitle}>
+            {copy.job.stagesTitle}
+          </h2>
+          {isActive && <span className={styles.num}>{copy.job.progress(toPercent(progress))}</span>}
+        </div>
+        {isActive && <ProgressBar value={progress} label={copy.job.stagesTitle} />}
+        {stageList}
+      </section>
+    );
 
   return (
     <div className={styles.page}>
       <Link to="/" className={styles.back}>
-        ← {copy.job.back}
+        <Icon name="chevron-left" />
+        {copy.job.back}
       </Link>
       <JobHeader job={job} onDeleted={onDeleted} />
 
@@ -172,4 +186,14 @@ function JobView({ job, onDeleted }: { job: Job; onDeleted: () => void }) {
       )}
     </div>
   );
+}
+
+/** Wall-clock time from the first stage start to the last stage end. */
+function totalAnalysisSec(job: Job): number {
+  const states = ANALYSIS_STAGE_IDS.map((id) => job.stages[id]);
+  const starts = states.flatMap((state) => (state.startedAt ? [state.startedAt] : [])).sort();
+  const ends = states.flatMap((state) => (state.finishedAt ? [state.finishedAt] : [])).sort();
+  const first = starts[0];
+  const last = ends.at(-1);
+  return first && last ? elapsedSec(first, last) : 0;
 }

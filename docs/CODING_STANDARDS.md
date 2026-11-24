@@ -142,6 +142,24 @@ apps/web/src/
 - WAJIB menghormati `@media (prefers-reduced-motion: reduce)`.
 - Ikuti aturan anti-slop di CLAUDE.md bagian 5.
 
+### Audit UI (hallmark sloplint)
+
+Jalankan audit statis sebelum menyelesaikan pekerjaan UI (skill terpasang, SETUP.md langkah 7):
+
+```bash
+node .claude/skills/hallmark/scripts/sloplint.mjs apps/web/src apps/web/index.html --scope app --genre modern-minimal
+```
+
+Semua temuan WAJIB diperbaiki, kecuali waiver yang sudah disetujui berikut:
+
+| Kode | Waiver                                     | Alasan                                                                                                            |
+| ---- | ------------------------------------------ | ----------------------------------------------------------------------------------------------------------------- |
+| 19   | Tanda "–" pada rentang waktu (`4:16–4:50`) | En dash untuk rentang angka adalah konvensi tipografi, bukan tanda pisah di kalimat                               |
+| 20   | Tidak ada stempel Hallmark di CSS          | Stempel hanya untuk halaman yang dibangun lewat alur Hallmark; app ini punya design system sendiri (`tokens.css`) |
+| 28b  | Video tanpa `poster`                       | `preload="metadata"` sudah menampilkan frame pertama, dan video bukan LCP                                         |
+
+Waiver baru hanya boleh ditambahkan ke tabel ini dengan alasan yang jelas.
+
 ### Aksesibilitas (WAJIB)
 
 - Elemen interaktif memakai elemen semantik (`button`, `a`, `input`). DILARANG `div` dengan `onClick`.

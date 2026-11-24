@@ -63,6 +63,20 @@
   gap: var(--space-2);
 }
 
+@media (max-width: 640px) {
+  .header {
+    flex-direction: column;
+  }
+
+  .titleRow {
+    flex-wrap: wrap;
+  }
+
+  .title {
+    white-space: normal;
+  }
+}
+
 .errorBox {
   padding: var(--space-3) var(--space-4);
   border: 1px solid var(--color-danger);

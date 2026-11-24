@@ -75,13 +75,14 @@ export async function buildApp(config: Config): Promise<FastifyInstance> {
 
   // Serve the built web app (npm run build) so `npm start` needs only one process.
   if (existsSync(config.webDistDir)) {
-    await app.register(fastifyStatic, {
-      root: config.webDistDir,
-      wildcard: false,
-      decorateReply: false,
-    });
+    // Wildcard mode looks files up per request, so a rebuild (new hashed asset names) works
+    // without restarting the server.
+    await app.register(fastifyStatic, { root: config.webDistDir, decorateReply: false });
     app.setNotFoundHandler((request, reply) => {
-      if (request.url.startsWith("/api/")) {
+      const pathname = request.url.split("?")[0] ?? "";
+      // API paths and missing files (anything with an extension) are real 404s;
+      // every other path is a client-side route of the single-page app.
+      if (pathname.startsWith("/api/") || /\.[a-z0-9]+$/i.test(pathname)) {
         const body: ApiErrorBody = { error: { code: "NOT_FOUND", message: "Tidak ditemukan." } };
         return reply.status(404).send(body);
       }

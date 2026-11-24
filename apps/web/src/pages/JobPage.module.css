@@ -7,6 +7,8 @@
   justify-self: start;
   display: inline-flex;
   align-items: center;
+  gap: var(--space-1);
+  margin-left: calc(-1 * var(--space-1));
   min-height: var(--hit-min);
   color: var(--color-text-muted);
   font-size: var(--text-sm);
@@ -88,4 +90,49 @@
   .side {
     position: static;
   }
+}
+
+.stagesDone {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface);
+}
+
+.stagesDone[open] {
+  padding-bottom: var(--space-1);
+}
+
+.stagesDone > ol {
+  margin: 0 var(--space-1);
+}
+
+.stagesSummary {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  min-height: 48px;
+  padding: 0 var(--space-4);
+  color: var(--color-text-muted);
+  font-size: var(--text-sm);
+  font-variant-numeric: tabular-nums;
+  cursor: pointer;
+  list-style: none;
+}
+
+.stagesSummary::-webkit-details-marker {
+  display: none;
+}
+
+.stagesSummary::before {
+  content: "";
+  width: 6px;
+  height: 6px;
+  border-right: 1.5px solid currentColor;
+  border-bottom: 1.5px solid currentColor;
+  transform: rotate(-45deg);
+  transition: transform var(--duration-fast) var(--ease-out);
+}
+
+.stagesDone[open] .stagesSummary::before {
+  transform: rotate(45deg);
 }

@@ -77,6 +77,7 @@ export const copy = {
       "Semua file job (video sumber, audio, transkrip, dan klip hasil render) akan dihapus dari disk.",
     deleteConfirm: "Ya, hapus",
     stagesTitle: "Tahap proses",
+    stagesDone: (duration: string) => `Semua tahap selesai dalam ${duration}`,
     openLog: "Log",
     sourcePreview: "Pratinjau video sumber",
     panels: "Panel job",
@@ -96,7 +97,7 @@ export const copy = {
     empty:
       "Tidak ada bagian yang cocok dengan durasi klip yang diminta. Coba ubah durasi minimal/maksimal di job baru.",
     duration: (seconds: number) => `${seconds} detik`,
-    scoreLabel: "skor dari 100",
+    scoreShort: "skor",
     scoreHint:
       "Skor 0–100 dari pembuka, energi suara, tempo, jeda, kelengkapan kalimat, durasi, dan kejelasan ucapan",
     reasonsLabel: "Alasan skor",

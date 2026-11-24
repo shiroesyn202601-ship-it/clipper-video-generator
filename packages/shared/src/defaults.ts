@@ -42,6 +42,8 @@ export const MOMENT_TUNING = {
   maxOverlapRatio: 0.2,
   /** Feature value above which a human-readable reason is added. */
   reasonThreshold: 0.7,
+  /** At most this many reasons are shown per candidate. */
+  maxReasons: 3,
 } as const;
 
 export const CAPTION_TUNING = {

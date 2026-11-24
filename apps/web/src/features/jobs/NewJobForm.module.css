@@ -75,7 +75,10 @@
 }
 
 .input:disabled {
-  opacity: 0.5;
+  border-color: var(--color-border);
+  background: var(--color-surface-raised);
+  color: var(--color-text-faint);
+  cursor: not-allowed;
 }
 
 .advanced {

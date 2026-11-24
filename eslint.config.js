@@ -6,7 +6,7 @@ import tseslint from "typescript-eslint";
 
 export default tseslint.config(
   {
-    ignores: ["**/node_modules", "**/dist", "workspace", "tools", ".venv", "workers"],
+    ignores: ["**/node_modules", "**/dist", "workspace", "tools", ".venv", "workers", ".claude"],
   },
   js.configs.recommended,
   {

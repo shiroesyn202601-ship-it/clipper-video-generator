@@ -63,6 +63,11 @@
   --color-warning: #e5c15a;
   --color-warning-soft: rgb(229 193 90 / 0.14);
   --color-focus: #8ab4ff;
+  /* Video letterbox and the 1px edge that keeps media from bleeding into the surface. */
+  --color-media: #050608;
+  --color-media-outline: oklch(1 0 0 / 0.1);
+  --color-backdrop: rgb(5 6 8 / 0.6);
+  --color-selection: rgb(242 163 58 / 0.32);
   --shadow-raised:
     0 1px 0 rgb(255 255 255 / 0.03) inset, 0 1px 2px rgb(0 0 0 / 0.4), 0 8px 24px rgb(0 0 0 / 0.28);
 }
@@ -89,6 +94,8 @@
     --color-warning: #8f6a00;
     --color-warning-soft: rgb(143 106 0 / 0.1);
     --color-focus: #2f6fdf;
+    --color-media-outline: oklch(0 0 0 / 0.1);
+    --color-selection: rgb(184 106 6 / 0.22);
     --shadow-raised: 0 1px 2px rgb(0 0 0 / 0.06), 0 8px 24px rgb(0 0 0 / 0.06);
   }
 }

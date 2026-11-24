@@ -162,7 +162,8 @@ npx skills add jakubkrehel/make-interfaces-feel-better
 npx skills add benjitaylor/skills --skill stageshow
 ```
 
-Tambahkan `-g` bila ingin dipasang global untuk semua project.
+Tambahkan `-g` bila ingin dipasang global untuk semua project. Folder `.claude/skills/` tidak di-commit (kode pihak ketiga);
+versi yang sudah direview dicatat di `skills-lock.json`.
 Opsional untuk pengecekan visual hallmark: `npm i -g puppeteer-core` + Google Chrome.
 
 ---
