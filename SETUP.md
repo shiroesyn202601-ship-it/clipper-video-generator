@@ -171,7 +171,7 @@ curl -L -o tools/models/face_detection_yunet_2023mar.onnx https://github.com/ope
 
 Fitur **Komentar kreator (AI)** di editor klip menulis komentar pembuka dan penutup, lalu membacakannya dengan suara AI.
 
-- Teks ditulis oleh model chat Groq (`GROQ_CHAT_MODEL`, default `llama-3.3-70b-versatile`), memakai `GROQ_API_KEYS` dari langkah 4b. Transkrip klip dan judul video dikirim ke Groq.
+- Teks ditulis oleh model chat Groq (`GROQ_CHAT_MODEL`, default `openai/gpt-oss-120b`), memakai `GROQ_API_KEYS` dari langkah 4b. Transkrip klip dan judul video dikirim ke Groq.
 - Suara dibuat oleh **Edge-TTS** (layanan suara online Microsoft, gratis). Paket `edge-tts` sudah ada di `workers/requirements.txt`; untuk instalasi lama jalankan ulang `pip install -r workers/requirements.txt` (langkah 3). Teks komentar dikirim ke Microsoft saat render.
 - Butuh internet saat membuat komentar dan saat merender klip yang memakai komentar. Klip tanpa komentar tidak terpengaruh.
 

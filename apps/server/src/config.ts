@@ -35,7 +35,7 @@ const envSchema = z.object({
   GROQ_API_KEYS: z.string().default(""),
   GROQ_MODEL: z.string().default("whisper-large-v3-turbo"),
   /** Groq chat model that writes the AI commentary (free tier). */
-  GROQ_CHAT_MODEL: z.string().default("llama-3.3-70b-versatile"),
+  GROQ_CHAT_MODEL: z.string().default("openai/gpt-oss-120b"),
 });
 
 /** "a, b,,c" → ["a", "b", "c"] (duplicates removed). */

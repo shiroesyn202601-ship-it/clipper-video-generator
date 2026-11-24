@@ -137,6 +137,13 @@ export class ClipService {
           clip.stages[id] = createStageState();
         }
       }
+      // "Render ulang" on a finished clip: global settings (brand kit, fonts) may have changed
+      // without touching the clip, so run the render stage again. Face tracking and reframe
+      // stay cached.
+      if (clip.stages.render.status === "done") {
+        clip.stages.render = createStageState();
+        clip.output = null;
+      }
       clip.error = null;
       clip.renderRequestedAt = new Date().toISOString();
     });

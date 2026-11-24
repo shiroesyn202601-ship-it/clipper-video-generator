@@ -49,7 +49,7 @@ memakai layanan online pihak ketiga **asalkan gratis**. Aturan lengkapnya ada di
 | 9   | Beresin detail kecil UI                   | **make-interfaces-feel-better** (agent skill)                                    | https://github.com/jakubkrehel/make-interfaces-feel-better             |
 | 10  | Finishing UI                              | **benjitaylor/skills** (skill _stageshow_)                                       | https://github.com/benjitaylor/skills                                  |
 | 11  | Transkrip online cepat (opsional, gratis) | **Groq API** (whisper-large-v3-turbo, free tier) — fallback ke whisper.cpp       | https://console.groq.com/docs/speech-to-text                           |
-| 12  | Tulis komentar kreator (opsional, gratis) | **Groq API chat** (llama-3.3-70b-versatile, free tier, key yang sama dengan #11) | https://console.groq.com/docs/text-chat                                |
+| 12  | Tulis komentar kreator (opsional, gratis) | **Groq API chat** (openai/gpt-oss-120b, free tier, key yang sama dengan #11)     | https://console.groq.com/docs/text-chat                                |
 | 13  | Suara komentar kreator (opsional, gratis) | **Edge-TTS** (suara online Microsoft, paket Python `edge-tts`)                   | https://github.com/rany2/edge-tts                                      |
 
 > **Catatan tool #7 (24 Nov 2026):** editly (https://github.com/mifi/editly) awalnya dipilih, tetapi dependency native-nya
