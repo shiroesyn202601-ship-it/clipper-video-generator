@@ -1,0 +1,28 @@
+.track {
+  height: 4px;
+  overflow: hidden;
+  border-radius: var(--radius-pill);
+  background: var(--color-surface-sunken);
+}
+
+.fill {
+  height: 100%;
+  transform-origin: left center;
+  transition: transform var(--duration-base) var(--ease-out);
+}
+
+.accent {
+  background: var(--color-accent);
+}
+
+.success {
+  background: var(--color-success);
+}
+
+.danger {
+  background: var(--color-danger);
+}
+
+.muted {
+  background: var(--color-border-strong);
+}

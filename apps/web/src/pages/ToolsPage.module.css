@@ -1,0 +1,20 @@
+.page {
+  display: grid;
+  gap: var(--space-5);
+}
+
+.head {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: var(--space-4);
+}
+
+.title {
+  font-size: var(--text-2xl);
+}
+
+.intro {
+  margin-top: var(--space-1);
+  color: var(--color-text-muted);
+}

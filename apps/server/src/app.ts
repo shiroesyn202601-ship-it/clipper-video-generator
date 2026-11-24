@@ -3,7 +3,13 @@ import fastifyStatic from "@fastify/static";
 import Fastify, { type FastifyInstance } from "fastify";
 import type { Config } from "./config.ts";
 import { registerHealthRoutes } from "./http/health-routes.ts";
+import { registerJobRoutes } from "./http/job-routes.ts";
+import { JobQueue } from "./jobs/job-queue.ts";
+import { JobService } from "./jobs/job-service.ts";
+import { JobStore } from "./jobs/job-store.ts";
 import { AppError } from "./lib/errors.ts";
+import { createPipelineRunner } from "./pipeline/run-pipeline.ts";
+import { analysisStages, clipStages } from "./pipeline/stages/index.ts";
 
 export type ApiErrorBody = { error: { code: string; message: string } };
 
@@ -33,9 +39,22 @@ export async function buildApp(config: Config): Promise<FastifyInstance> {
     return reply.status(statusCode).send(body);
   });
 
+  const store = new JobStore(config.workspaceDir, app.log);
+  await store.load();
+  const runTask = createPipelineRunner({
+    config,
+    store,
+    logger: app.log,
+    analysisStages,
+    clipStages,
+  });
+  const queue = new JobQueue(runTask, app.log);
+  const service = new JobService(store, queue);
+
   await app.register(
     (api, _options, done) => {
       registerHealthRoutes(api, config);
+      registerJobRoutes(api, { service, store });
       done();
     },
     { prefix: "/api" },
@@ -52,6 +71,10 @@ export async function buildApp(config: Config): Promise<FastifyInstance> {
       return reply.sendFile("index.html");
     });
   }
+
+  app.addHook("onReady", async () => {
+    await service.recover();
+  });
 
   return app;
 }

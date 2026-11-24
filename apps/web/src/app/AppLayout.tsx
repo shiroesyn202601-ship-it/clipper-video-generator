@@ -1,7 +1,10 @@
-import { Link, Outlet } from "react-router-dom";
+import { Link, NavLink, Outlet } from "react-router-dom";
 import { HealthBanner } from "../features/health/HealthBanner.tsx";
 import { copy } from "../lib/copy.ts";
 import styles from "./AppLayout.module.css";
+
+const navClass = ({ isActive }: { isActive: boolean }): string =>
+  `${styles.navLink ?? ""} ${isActive ? (styles.navLinkActive ?? "") : ""}`;
 
 export function AppLayout() {
   return (
@@ -23,6 +26,14 @@ export function AppLayout() {
           </svg>
           <span>{copy.appName}</span>
         </Link>
+        <nav className={styles.nav} aria-label="Navigasi utama">
+          <NavLink to="/" end className={navClass}>
+            {copy.nav.newJob}
+          </NavLink>
+          <NavLink to="/tools" className={navClass}>
+            {copy.nav.tools}
+          </NavLink>
+        </nav>
       </header>
       <main className={styles.main}>
         <HealthBanner />

@@ -232,7 +232,7 @@ workers/
 ## 7. Pipeline & Data
 
 - Setiap stage adalah fungsi dengan kontrak: `run(ctx: StageContext): Promise<StageResult>`.
-- Stage WAJIB **idempoten**. Jika output sudah ada dan marker `.done` ada, stage di-skip.
+- Stage WAJIB **idempoten**. Status `done`/`skipped` di `job.json` adalah penanda selesai: saat job dilanjutkan, stage itu di-skip. Stage menulis output ke file sementara lalu rename, sehingga file setengah jadi tidak pernah dianggap selesai.
 - Stage hanya membaca output stage sebelumnya **lewat path yang tercatat di `job.json`**, bukan dengan menebak nama file.
 - Layout workspace WAJIB tetap:
   ```

@@ -219,7 +219,7 @@ Base: `http://127.0.0.1:5174/api`. Request dan response dalam JSON. Semua body d
 | PATCH  | `/jobs/:id/clips/:clipId`        | ubah rentang / caption                                                        |
 | POST   | `/jobs/:id/clips/:clipId/render` | jalankan track-faces → reframe → render                                       |
 | GET    | `/jobs/:id/media/*`              | stream file dari folder job (mendukung HTTP Range, hanya di dalam folder job) |
-| GET    | `/jobs/:id/events`               | **SSE**: `stage-update`, `job-update`, `clip-update`, `log`                   |
+| GET    | `/jobs/:id/events`               | **SSE**: `job-update` (snapshot job lengkap, termasuk klip) dan `job-deleted` |
 
 Format error seragam: `{ error: { code: string, message: string } }` dengan HTTP status yang tepat (400 validasi, 404 tidak ada, 409 konflik state, 500 tak terduga). `message` berisi teks bahasa Indonesia untuk user.
 

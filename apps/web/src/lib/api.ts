@@ -1,4 +1,12 @@
-import { healthReportSchema, type HealthReport } from "@clipper/shared";
+import {
+  healthReportSchema,
+  jobSchema,
+  jobSummarySchema,
+  type CreateJobBody,
+  type HealthReport,
+  type Job,
+  type JobSummary,
+} from "@clipper/shared";
 import { z } from "zod";
 import { copy } from "./copy.ts";
 
@@ -61,9 +69,38 @@ async function request<T extends z.ZodTypeAny>(
   return options.schema.parse(payload) as z.infer<T>;
 }
 
+const noContentSchema = z.null();
+
 export const api = {
   getHealth: (signal?: AbortSignal): Promise<HealthReport> =>
     request("/health", { schema: healthReportSchema, ...(signal ? { signal } : {}) }),
+
+  listJobs: (signal?: AbortSignal): Promise<JobSummary[]> =>
+    request("/jobs", { schema: z.array(jobSummarySchema), ...(signal ? { signal } : {}) }),
+
+  getJob: (jobId: string, signal?: AbortSignal): Promise<Job> =>
+    request(`/jobs/${encodeURIComponent(jobId)}`, {
+      schema: jobSchema,
+      ...(signal ? { signal } : {}),
+    }),
+
+  createJob: (body: CreateJobBody): Promise<Job> =>
+    request("/jobs", { method: "POST", body, schema: jobSchema }),
+
+  cancelJob: (jobId: string): Promise<Job> =>
+    request(`/jobs/${encodeURIComponent(jobId)}/cancel`, { method: "POST", schema: jobSchema }),
+
+  retryJob: (jobId: string): Promise<Job> =>
+    request(`/jobs/${encodeURIComponent(jobId)}/retry`, { method: "POST", schema: jobSchema }),
+
+  deleteJob: async (jobId: string): Promise<void> => {
+    await request(`/jobs/${encodeURIComponent(jobId)}`, {
+      method: "DELETE",
+      schema: noContentSchema,
+    });
+  },
+
+  jobEventsUrl: (jobId: string): string => `${API_BASE}/jobs/${encodeURIComponent(jobId)}/events`,
 };
 
 export function errorText(error: unknown): string {
