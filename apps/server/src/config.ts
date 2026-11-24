@@ -19,6 +19,7 @@ const envSchema = z.object({
   YTDLP_BIN: z.string().default(`${venvBin}/yt-dlp${exe}`),
   FFMPEG_BIN: z.string().default("ffmpeg"),
   FFPROBE_BIN: z.string().default("ffprobe"),
+  DENO_BIN: z.string().default("deno"),
   WHISPER_BIN: z.string().default(
     // Windows uses the official prebuilt release; macOS/Linux build from source (SETUP.md §4).
     isWindows ? "./tools/whisper-bin/whisper-cli.exe" : "./tools/whisper.cpp/build/bin/whisper-cli",
@@ -51,6 +52,7 @@ function loadConfig() {
       ytdlp: resolveBin(env.YTDLP_BIN),
       ffmpeg: resolveBin(env.FFMPEG_BIN),
       ffprobe: resolveBin(env.FFPROBE_BIN),
+      deno: resolveBin(env.DENO_BIN),
       whisper: resolveBin(env.WHISPER_BIN),
     }),
     whisper: Object.freeze({

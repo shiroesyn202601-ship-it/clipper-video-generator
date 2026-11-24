@@ -4,6 +4,7 @@ export const TOOL_IDS = [
   "ffmpeg",
   "ffprobe",
   "yt-dlp",
+  "deno",
   "whisper",
   "whisper-model",
   "python",

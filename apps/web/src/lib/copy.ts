@@ -78,6 +78,7 @@ export const copy = {
     deleteConfirm: "Ya, hapus",
     stagesTitle: "Tahap proses",
     openLog: "Log",
+    sourcePreview: "Pratinjau video sumber",
     source: "Sumber",
     duration: "Durasi",
     created: "Dibuat",

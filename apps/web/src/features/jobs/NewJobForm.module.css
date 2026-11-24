@@ -46,6 +46,38 @@
   font-size: var(--text-sm);
 }
 
+.divider {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  margin: var(--space-2) 0;
+  color: var(--color-text-faint);
+  font-size: var(--text-xs);
+}
+
+.divider::before,
+.divider::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: var(--color-border);
+}
+
+.upload {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.uploadLabel {
+  color: var(--color-text-muted);
+  font-size: var(--text-sm);
+  font-variant-numeric: tabular-nums;
+}
+
+.input:disabled {
+  opacity: 0.5;
+}
+
 .advanced {
   margin-top: var(--space-3);
   border-top: 1px solid var(--color-border);

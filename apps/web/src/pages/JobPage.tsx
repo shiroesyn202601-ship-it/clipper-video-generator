@@ -9,7 +9,7 @@ import { jobDisplayTitle } from "../features/jobs/JobList.tsx";
 import { StageList } from "../features/jobs/StageList.tsx";
 import { useDeleteJob, useJob, useJobAction, useJobEvents } from "../features/jobs/job-queries.ts";
 import { jobStatusTone } from "../features/jobs/status-tone.ts";
-import { errorText } from "../lib/api.ts";
+import { api, errorText } from "../lib/api.ts";
 import { copy } from "../lib/copy.ts";
 import { formatDateTime, formatDuration, toPercent } from "../lib/format.ts";
 import styles from "./JobPage.module.css";
@@ -114,6 +114,17 @@ function JobView({ job, onDeleted }: JobViewProps) {
         <p className={styles.errorBox} role="alert">
           {job.error.userMessage}
         </p>
+      )}
+
+      {job.artifacts.sourceVideo && job.stages.download.status === "done" && (
+        // eslint-disable-next-line jsx-a11y/media-has-caption -- captions do not exist before transcription; TODO(web): add WebVTT track from the transcript (phase 5)
+        <video
+          className={styles.preview}
+          src={api.mediaUrl(job.id, job.artifacts.sourceVideo)}
+          controls
+          preload="metadata"
+          aria-label={copy.job.sourcePreview}
+        />
       )}
 
       <section className={styles.section} aria-labelledby="stages-title">

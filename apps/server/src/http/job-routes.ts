@@ -1,9 +1,32 @@
-import { createJobBodySchema, type Job, type JobEvent, type JobSummary } from "@clipper/shared";
+import path from "node:path";
+import {
+  createJobBodySchema,
+  jobSettingsInputSchema,
+  type Job,
+  type JobEvent,
+  type JobSettingsInput,
+  type JobSummary,
+} from "@clipper/shared";
 import type { FastifyInstance } from "fastify";
 import { z } from "zod";
 import type { JobService } from "../jobs/job-service.ts";
 import type { JobStore } from "../jobs/job-store.ts";
+import { AppError } from "../lib/errors.ts";
+import { resolveInside } from "../lib/fs-utils.ts";
 import { parseInput } from "./validate.ts";
+
+function parseJsonField(value: unknown): unknown {
+  try {
+    return JSON.parse(String(value));
+  } catch {
+    throw new AppError({
+      code: "VALIDATION_FAILED",
+      message: "settings field is not JSON",
+      userMessage: "Pengaturan tidak valid.",
+      statusCode: 400,
+    });
+  }
+}
 
 const SSE_HEARTBEAT_MS = 15_000;
 
@@ -22,6 +45,42 @@ export function registerJobRoutes(
     const job = await service.create({ kind: "url", url: body.url }, body.settings);
     service.start(job.id);
     return reply.status(201).send(job);
+  });
+
+  /** multipart/form-data: optional "settings" (JSON string) field first, then one "file". */
+  app.post("/jobs/upload", async (request, reply): Promise<Job> => {
+    let settingsInput: JobSettingsInput | undefined;
+    for await (const part of request.parts()) {
+      if (part.type === "field" && part.fieldname === "settings") {
+        settingsInput = parseInput(jobSettingsInputSchema, parseJsonField(part.value));
+        continue;
+      }
+      if (part.type === "file") {
+        const job = await service.createFromUpload({
+          originalName: part.filename,
+          settingsInput,
+          stream: part.file,
+        });
+        service.start(job.id);
+        return reply.status(201).send(job);
+      }
+    }
+    throw new AppError({
+      code: "UPLOAD_MISSING_FILE",
+      message: "multipart request without a file part",
+      userMessage: "Tidak ada file yang dikirim.",
+      statusCode: 400,
+    });
+  });
+
+  /** Streams a file from the job folder (video preview, final clip). Supports HTTP Range. */
+  app.get("/jobs/:id/media/*", (request, reply) => {
+    const { id } = parseInput(jobParamsSchema, request.params);
+    const relative = parseInput(z.object({ "*": z.string().min(1) }), request.params)["*"];
+    service.get(id);
+    const jobDir = store.jobDir(id);
+    const absolute = resolveInside(jobDir, relative);
+    return reply.sendFile(path.relative(jobDir, absolute), jobDir);
   });
 
   app.get("/jobs/:id", (request): Job => {

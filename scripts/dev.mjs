@@ -1,6 +1,6 @@
 // Runs the local server and the Vite dev server side by side.
 // Uses plain Node (no extra dependency) and stops both when one exits.
-import { spawn } from "node:child_process";
+import { spawn, spawnSync } from "node:child_process";
 import { createRequire } from "node:module";
 import path from "node:path";
 
@@ -43,7 +43,15 @@ let isShuttingDown = false;
 function shutdown(code) {
   if (isShuttingDown) return;
   isShuttingDown = true;
-  for (const child of children) child.kill();
+  for (const child of children) {
+    if (child.exitCode !== null) continue;
+    // Windows: child.kill() leaves grandchildren (node --watch, esbuild) holding the ports.
+    if (process.platform === "win32") {
+      spawnSync("taskkill", ["/pid", String(child.pid), "/T", "/F"], { stdio: "ignore" });
+    } else {
+      child.kill();
+    }
+  }
   process.exit(code);
 }
 

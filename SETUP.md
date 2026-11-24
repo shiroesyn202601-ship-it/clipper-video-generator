@@ -9,14 +9,15 @@ Setelah semua langkah selesai, buka aplikasi dan pastikan halaman **Status tools
 
 ## 1. Prasyarat
 
-| Tool                         | Versi                                                                             | Cek                                    |
-| ---------------------------- | --------------------------------------------------------------------------------- | -------------------------------------- |
-| Git                          | terbaru                                                                           | `git --version`                        |
-| Node.js                      | **≥ 22.18** (disarankan 24 LTS), karena server memakai type stripping bawaan Node | `node -v`                              |
-| Python                       | **3.11** (versi yang diuji dengan torch 2.1.2)                                    | `python --version`                     |
-| ffmpeg + ffprobe             | terbaru, ada di PATH                                                              | `ffmpeg -version` · `ffprobe -version` |
-| (macOS/Linux) CMake + C/C++  | untuk build whisper.cpp                                                           | `cmake --version`                      |
-| (Opsional) GPU NVIDIA + CUDA | mempercepat demucs & whisper                                                      | `nvidia-smi`                           |
+| Tool                         | Versi                                                                              | Cek                                    |
+| ---------------------------- | ---------------------------------------------------------------------------------- | -------------------------------------- |
+| Git                          | terbaru                                                                            | `git --version`                        |
+| Node.js                      | **≥ 22.18** (disarankan 24 LTS), karena server memakai type stripping bawaan Node  | `node -v`                              |
+| Python                       | **3.11** (versi yang diuji dengan torch 2.1.2)                                     | `python --version`                     |
+| ffmpeg + ffprobe             | terbaru, ada di PATH                                                               | `ffmpeg -version` · `ffprobe -version` |
+| Deno                         | terbaru, ada di PATH. Dipakai yt-dlp untuk memecahkan tantangan JavaScript YouTube | `deno --version`                       |
+| (macOS/Linux) CMake + C/C++  | untuk build whisper.cpp                                                            | `cmake --version`                      |
+| (Opsional) GPU NVIDIA + CUDA | mempercepat demucs & whisper                                                       | `nvidia-smi`                           |
 
 ### Windows
 
@@ -25,6 +26,7 @@ winget install Git.Git
 winget install OpenJS.NodeJS.LTS
 winget install Python.Python.3.11
 winget install Gyan.FFmpeg
+winget install DenoLand.Deno
 ```
 
 Tutup lalu buka ulang terminal setelah instalasi agar PATH ter-update. Di Windows, whisper.cpp memakai binary resmi siap pakai, jadi **tidak perlu** CMake atau Visual Studio Build Tools.
@@ -32,13 +34,14 @@ Tutup lalu buka ulang terminal setelah instalasi agar PATH ter-update. Di Window
 ### macOS
 
 ```bash
-brew install git node python@3.11 ffmpeg cmake
+brew install git node python@3.11 ffmpeg cmake deno
 ```
 
 ### Linux (Debian/Ubuntu)
 
 ```bash
 sudo apt install git nodejs npm python3.11 python3.11-venv ffmpeg cmake build-essential
+curl -fsSL https://deno.land/install.sh | sh   # Deno
 ```
 
 ---
@@ -200,8 +203,9 @@ npm run check:py    # ruff + pytest (Python worker)
 
 ## 10. Troubleshooting
 
-| Gejala                                        | Penyebab & solusi                                                                            |
-| --------------------------------------------- | -------------------------------------------------------------------------------------------- |
-| `ffmpeg` "Belum ada" padahal sudah di-install | Terminal atau VS Code dibuka sebelum instalasi. Tutup semua terminal/VS Code lalu buka lagi. |
-| yt-dlp gagal mengunduh                        | YouTube sering berubah. Perbarui dengan `.venv/Scripts/python -m pip install -U yt-dlp`.     |
-| `ModuleNotFoundError: torchaudio.backend`     | torchaudio terlalu baru. Ulangi `pip install -r workers/requirements.txt`.                   |
+| Gejala                                         | Penyebab & solusi                                                                                                                                                            |
+| ---------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `ffmpeg` "Belum ada" padahal sudah di-install  | Terminal atau VS Code dibuka sebelum instalasi. Tutup semua terminal/VS Code lalu buka lagi.                                                                                 |
+| yt-dlp gagal mengunduh                         | YouTube sering berubah. Perbarui dengan `.venv/Scripts/python -m pip install -U "yt-dlp[default]"`. Pastikan `deno --version` berjalan (status tools menampilkan Deno siap). |
+| Log yt-dlp berisi "n challenge solving failed" | Deno belum ada di PATH atau paket `yt-dlp-ejs` belum terpasang. Pasang Deno, lalu ulangi `pip install -r workers/requirements.txt`.                                          |
+| `ModuleNotFoundError: torchaudio.backend`      | torchaudio terlalu baru. Ulangi `pip install -r workers/requirements.txt`.                                                                                                   |

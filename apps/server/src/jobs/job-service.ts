@@ -1,4 +1,9 @@
 import { randomUUID } from "node:crypto";
+import { createWriteStream } from "node:fs";
+import { mkdir } from "node:fs/promises";
+import path from "node:path";
+import type { Readable } from "node:stream";
+import { pipeline } from "node:stream/promises";
 import {
   ANALYSIS_STAGE_IDS,
   createStageState,
@@ -10,7 +15,10 @@ import {
 } from "@clipper/shared";
 import { parseInput } from "../http/validate.ts";
 import { AppError } from "../lib/errors.ts";
+import { sanitizeFileName } from "../lib/fs-utils.ts";
 import type { JobQueue } from "./job-queue.ts";
+
+const ALLOWED_UPLOAD_EXTENSIONS = new Set([".mp4", ".mkv", ".mov", ".m4v", ".webm"]);
 import type { JobStore } from "./job-store.ts";
 
 function newAnalysisStages(): Job["stages"] {
@@ -69,6 +77,51 @@ export class JobService {
     };
     await this.#store.create(job);
     return job;
+  }
+
+  /**
+   * Creates a job from an uploaded file stream. The file is streamed straight to disk
+   * (never buffered in memory); the job is removed again if the upload fails.
+   */
+  async createFromUpload(options: {
+    originalName: string;
+    settingsInput: JobSettingsInput | undefined;
+    stream: Readable & { truncated?: boolean };
+  }): Promise<Job> {
+    const extension = path.extname(options.originalName).toLowerCase();
+    if (!ALLOWED_UPLOAD_EXTENSIONS.has(extension)) {
+      options.stream.resume(); // drain so the request can finish
+      throw new AppError({
+        code: "UPLOAD_TYPE_NOT_ALLOWED",
+        message: `Upload extension not allowed: ${extension}`,
+        userMessage: "Format file tidak didukung. Gunakan MP4, MKV, MOV, M4V, atau WEBM.",
+        statusCode: 415,
+      });
+    }
+    const job = await this.create(
+      { kind: "file", originalName: sanitizeFileName(options.originalName) },
+      options.settingsInput,
+    );
+    const sourceDir = path.join(this.#store.jobDir(job.id), "source");
+    const destination = path.join(sourceDir, `upload${extension}`);
+    try {
+      await mkdir(sourceDir, { recursive: true });
+      await pipeline(options.stream, createWriteStream(destination));
+      if (options.stream.truncated) {
+        throw new AppError({
+          code: "UPLOAD_TOO_LARGE",
+          message: "Upload exceeded the size limit",
+          userMessage: "File terlalu besar. Naikkan MAX_UPLOAD_MB di .env bila perlu.",
+          statusCode: 413,
+        });
+      }
+    } catch (error) {
+      await this.#store.delete(job.id);
+      throw error;
+    }
+    return this.#store.update(job.id, (draft) => {
+      draft.artifacts.sourceVideo = `source/upload${extension}`;
+    });
   }
 
   start(jobId: string): void {

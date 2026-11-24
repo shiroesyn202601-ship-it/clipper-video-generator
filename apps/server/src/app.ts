@@ -1,4 +1,6 @@
 import { existsSync } from "node:fs";
+import { mkdir } from "node:fs/promises";
+import fastifyMultipart from "@fastify/multipart";
 import fastifyStatic from "@fastify/static";
 import Fastify, { type FastifyInstance } from "fastify";
 import type { Config } from "./config.ts";
@@ -39,8 +41,15 @@ export async function buildApp(config: Config): Promise<FastifyInstance> {
     return reply.status(statusCode).send(body);
   });
 
+  await mkdir(config.workspaceDir, { recursive: true });
   const store = new JobStore(config.workspaceDir, app.log);
   await store.load();
+
+  // Decorates reply.sendFile (with HTTP Range support) without serving anything by itself.
+  await app.register(fastifyStatic, { root: config.workspaceDir, serve: false });
+  await app.register(fastifyMultipart, {
+    limits: { fileSize: config.maxUploadBytes, files: 1, fields: 4, fieldSize: 64 * 1024 },
+  });
   const runTask = createPipelineRunner({
     config,
     store,
@@ -62,13 +71,17 @@ export async function buildApp(config: Config): Promise<FastifyInstance> {
 
   // Serve the built web app (npm run build) so `npm start` needs only one process.
   if (existsSync(config.webDistDir)) {
-    await app.register(fastifyStatic, { root: config.webDistDir, wildcard: false });
+    await app.register(fastifyStatic, {
+      root: config.webDistDir,
+      wildcard: false,
+      decorateReply: false,
+    });
     app.setNotFoundHandler((request, reply) => {
       if (request.url.startsWith("/api/")) {
         const body: ApiErrorBody = { error: { code: "NOT_FOUND", message: "Tidak ditemukan." } };
         return reply.status(404).send(body);
       }
-      return reply.sendFile("index.html");
+      return reply.sendFile("index.html", config.webDistDir);
     });
   }
 

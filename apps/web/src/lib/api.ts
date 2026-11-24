@@ -5,6 +5,7 @@ import {
   type CreateJobBody,
   type HealthReport,
   type Job,
+  type JobSettingsInput,
   type JobSummary,
 } from "@clipper/shared";
 import { z } from "zod";
@@ -101,6 +102,48 @@ export const api = {
   },
 
   jobEventsUrl: (jobId: string): string => `${API_BASE}/jobs/${encodeURIComponent(jobId)}/events`,
+
+  /** URL of a file inside the job folder, e.g. "source/source.mp4". */
+  mediaUrl: (jobId: string, relativePath: string): string =>
+    `${API_BASE}/jobs/${encodeURIComponent(jobId)}/media/${relativePath
+      .split("/")
+      .map(encodeURIComponent)
+      .join("/")}`,
+
+  /** Upload uses XMLHttpRequest because fetch cannot report upload progress. */
+  uploadJob: (options: {
+    file: File;
+    settings: JobSettingsInput;
+    onProgress: (fraction: number) => void;
+    signal?: AbortSignal;
+  }): Promise<Job> =>
+    new Promise((resolve, reject) => {
+      const form = new FormData();
+      form.append("settings", JSON.stringify(options.settings)); // must precede the file
+      form.append("file", options.file);
+      const xhr = new XMLHttpRequest();
+      xhr.open("POST", `${API_BASE}/jobs/upload`);
+      xhr.responseType = "json";
+      xhr.upload.onprogress = (event) => {
+        if (event.lengthComputable) options.onProgress(event.loaded / event.total);
+      };
+      xhr.onload = () => {
+        const payload: unknown = xhr.response;
+        if (xhr.status >= 200 && xhr.status < 300) {
+          resolve(jobSchema.parse(payload));
+          return;
+        }
+        const parsed = apiErrorBodySchema.safeParse(payload);
+        reject(
+          parsed.success
+            ? new ApiError(parsed.data.error.code, parsed.data.error.message, xhr.status)
+            : new ApiError("HTTP_ERROR", copy.errors.unexpected, xhr.status),
+        );
+      };
+      xhr.onerror = () => reject(new ApiError("NETWORK_ERROR", copy.errors.serverUnreachable, 0));
+      options.signal?.addEventListener("abort", () => xhr.abort());
+      xhr.send(form);
+    }),
 };
 
 export function errorText(error: unknown): string {

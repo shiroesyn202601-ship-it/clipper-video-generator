@@ -1,4 +1,4 @@
-import { jobEventSchema, type Job, type JobSummary } from "@clipper/shared";
+import { jobEventSchema, type Job, type JobSettings, type JobSummary } from "@clipper/shared";
 import { useMutation, useQuery, useQueryClient, type QueryClient } from "@tanstack/react-query";
 import { useEffect } from "react";
 import { api } from "../../lib/api.ts";
@@ -63,6 +63,15 @@ export function useCreateJob() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: api.createJob,
+    onSuccess: (job) => storeJob(queryClient, job),
+  });
+}
+
+export function useUploadJob(onProgress: (fraction: number) => void) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (variables: { file: File; settings: JobSettings }) =>
+      api.uploadJob({ ...variables, onProgress }),
     onSuccess: (job) => storeJob(queryClient, job),
   });
 }
