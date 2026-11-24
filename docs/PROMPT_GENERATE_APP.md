@@ -53,11 +53,11 @@ Pengguna: kreator / editor konten podcast, umumnya berbahasa Indonesia.
 
 **Prinsip produk:**
 
-- 100% lokal. Tidak ada data yang dikirim ke cloud.
+- Lokal secara default. Layanan online pihak ketiga hanya boleh dipakai bila gratis, opsional, dan punya fallback lokal (lihat CLAUDE.md bagian 4, "Layanan online").
 - Bisa dilanjutkan: jika aplikasi ditutup di tengah proses, job bisa dilanjutkan dari stage terakhir yang selesai.
 - Jujur: semua angka di UI (skor, durasi, progres) berasal dari data asli, tidak ada nilai palsu.
 
-**Di luar cakupan (jangan dibuat):** login/akun, upload otomatis ke media sosial, layanan cloud, editor video timeline penuh, aplikasi mobile.
+**Di luar cakupan (jangan dibuat):** login/akun, upload otomatis ke media sosial, backend cloud milik sendiri, layanan cloud berbayar, editor video timeline penuh, aplikasi mobile.
 
 ---
 

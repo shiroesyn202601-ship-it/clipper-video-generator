@@ -1,7 +1,8 @@
 # Podcast Clipper
 
 Aplikasi **lokal** untuk mengubah video podcast panjang menjadi klip vertikal 9:16 bersubtitle, siap untuk
-YouTube Shorts, Reels, dan TikTok. Semua proses berjalan di komputer sendiri, dan tidak ada data yang dikirim ke cloud.
+YouTube Shorts, Reels, dan TikTok. Proses berjalan di komputer sendiri secara default. Layanan online gratis hanya dipakai bila diaktifkan,
+dengan fallback ke proses lokal.
 
 ```
 URL / file ─► yt-dlp ─► Demucs (pisah vokal) ─► DeepFilterNet (bersihkan noise) ─► whisper.cpp (transkrip)

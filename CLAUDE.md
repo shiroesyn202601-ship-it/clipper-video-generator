@@ -28,7 +28,9 @@ URL / file video
 Klip 9:16 + subtitle
 ```
 
-Aplikasi berjalan **sepenuhnya di komputer lokal**. Tidak ada server cloud, tidak ada upload ke layanan pihak ketiga.
+Aplikasi berjalan **di komputer lokal** (server Node + worker Python lokal, tanpa backend cloud milik sendiri).
+Proses default tetap lokal. Sejak 24 Nov 2026, atas persetujuan user, tahap tertentu (mis. transkrip) **boleh**
+memakai layanan online pihak ketiga **asalkan gratis**. Aturan lengkapnya ada di bagian 4 ("Layanan online").
 
 ---
 
@@ -108,6 +110,17 @@ Kalau arsitektur ini perlu diubah, update bagian ini **dan** `SETUP.md` dalam co
 - Tangani error tool eksternal: cek exit code, simpan stderr ke log job, tampilkan pesan ringkas ke user.
 - Konfigurasi (path binary, model whisper, port) diletakkan di file `.env` / config, dengan contoh di `.env.example`.
 
+### Layanan online (pihak ketiga)
+
+Disetujui user pada 24 Nov 2026: video, audio, atau transkrip **boleh** dikirim ke layanan online **asalkan gratis**.
+
+- Hanya layanan yang benar-benar **gratis**: free tier tanpa biaya dan tanpa kartu kredit/billing aktif. Layanan berbayar per pemakaian tidak boleh dipakai.
+- Saat kuota gratis habis, layanan gagal, atau tidak ada internet, aplikasi **kembali ke tool lokal** (mis. whisper.cpp) dan memberi tahu user di UI. Aplikasi tidak boleh memicu tagihan secara diam-diam.
+- Tool lokal di bagian 2 tetap ada sebagai fallback. Jangan menghapusnya.
+- Layanan online bisa dimatikan dari setting job/`.env`, dan UI menunjukkan tahap mana yang memakai layanan online.
+- API key disimpan di `.env` (contoh kosong di `.env.example`), tidak pernah di-commit, dan tidak dikirim ke browser.
+- Layanan yang dipakai tetap harus disetujui user dan dicatat di tabel bagian 2 serta di SETUP.md (aturan proses kerja no. 4).
+
 ### Fitur podcast
 
 - Prioritaskan kualitas suara: pisahkan vokal (demucs) dan bersihkan noise (DeepFilterNet) **sebelum** transkrip, agar transkrip lebih akurat.
@@ -134,7 +147,7 @@ Kalau arsitektur ini perlu diubah, update bagian ini **dan** `SETUP.md` dalam co
 
 - ❌ Menambah framework UI selain React (Vue, Svelte, Angular, dll.).
 - ❌ Menambah library/tool baru di luar bagian 2 tanpa persetujuan user.
-- ❌ Mengirim video, audio, atau transkrip ke layanan cloud/API pihak ketiga. Semua proses **lokal**.
+- ❌ Mengirim video, audio, atau transkrip ke layanan cloud/API pihak ketiga yang **berbayar**, atau ke layanan gratis yang belum disetujui user. Lihat "Layanan online" di bagian 4.
 - ❌ Commit file besar atau hasil generate: video, audio, model (`*.bin`, `*.pt`, `*.onnx`), `node_modules/`, `.venv/`, `workspace/`, `tools/`.
 - ❌ Commit rahasia: `.env`, cookies browser untuk yt-dlp, token.
 - ❌ Menyusun perintah shell dari string mentah input user (`exec("yt-dlp " + url)`).
