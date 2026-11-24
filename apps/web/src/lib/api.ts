@@ -2,6 +2,8 @@ import {
   healthReportSchema,
   jobSchema,
   jobSummarySchema,
+  transcriptSchema,
+  type Transcript,
   type CreateJobBody,
   type HealthReport,
   type Job,
@@ -100,6 +102,15 @@ export const api = {
       schema: noContentSchema,
     });
   },
+
+  getTranscript: (jobId: string, signal?: AbortSignal): Promise<Transcript> =>
+    request(`/jobs/${encodeURIComponent(jobId)}/transcript`, {
+      schema: transcriptSchema,
+      ...(signal ? { signal } : {}),
+    }),
+
+  transcriptVttUrl: (jobId: string): string =>
+    `${API_BASE}/jobs/${encodeURIComponent(jobId)}/transcript.vtt`,
 
   jobEventsUrl: (jobId: string): string => `${API_BASE}/jobs/${encodeURIComponent(jobId)}/events`,
 

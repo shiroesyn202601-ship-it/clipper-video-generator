@@ -1,18 +1,20 @@
 import { ANALYSIS_STAGE_IDS, analysisProgress, type Job } from "@clipper/shared";
-import { useCallback, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
-import { Button } from "../components/ui/Button.tsx";
-import { ConfirmDialog } from "../components/ui/ConfirmDialog.tsx";
 import { ProgressBar } from "../components/ui/ProgressBar.tsx";
-import { StatusBadge } from "../components/ui/StatusBadge.tsx";
-import { jobDisplayTitle } from "../features/jobs/JobList.tsx";
+import { Tabs, type TabItem } from "../components/ui/Tabs.tsx";
+import { JobHeader } from "../features/jobs/JobHeader.tsx";
+import { SourcePlayer } from "../features/jobs/SourcePlayer.tsx";
 import { StageList } from "../features/jobs/StageList.tsx";
-import { useDeleteJob, useJob, useJobAction, useJobEvents } from "../features/jobs/job-queries.ts";
-import { jobStatusTone } from "../features/jobs/status-tone.ts";
-import { api, errorText } from "../lib/api.ts";
+import { useJob, useJobEvents } from "../features/jobs/job-queries.ts";
+import { TranscriptPanel } from "../features/transcript/TranscriptPanel.tsx";
+import { useTranscript } from "../features/transcript/use-transcript.ts";
+import { errorText } from "../lib/api.ts";
 import { copy } from "../lib/copy.ts";
-import { formatDateTime, formatDuration, toPercent } from "../lib/format.ts";
+import { toPercent } from "../lib/format.ts";
 import styles from "./JobPage.module.css";
+
+type PanelId = "transcript";
 
 export function JobPage() {
   const { jobId = "" } = useParams();
@@ -35,125 +37,83 @@ export function JobPage() {
   return <JobView job={job.data} onDeleted={goHome} />;
 }
 
-type JobViewProps = {
-  job: Job;
-  onDeleted: () => void;
-};
-
-function JobView({ job, onDeleted }: JobViewProps) {
-  const cancel = useJobAction("cancel");
-  const retry = useJobAction("retry");
-  const remove = useDeleteJob();
-  const [isConfirmingDelete, setIsConfirmingDelete] = useState(false);
-
+function JobView({ job, onDeleted }: { job: Job; onDeleted: () => void }) {
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const [currentTimeSec, setCurrentTimeSec] = useState(0);
+  const [panel, setPanel] = useState<PanelId>("transcript");
+  const hasTranscript = job.stages.transcribe.status === "done";
+  const transcript = useTranscript(job.id, hasTranscript);
   const isActive = job.status === "queued" || job.status === "analyzing";
-  const canRetry = job.status === "failed" || job.status === "cancelled";
   const progress = analysisProgress(job);
-  const actionError = cancel.error ?? retry.error ?? remove.error;
+  const sourcePath = job.stages.download.status === "done" ? job.artifacts.sourceVideo : undefined;
+
+  const seek = (timeSec: number): void => {
+    const video = videoRef.current;
+    if (!video) return;
+    video.currentTime = timeSec;
+    void video.play().catch(() => undefined);
+  };
+
+  const panels: TabItem<PanelId>[] = [
+    {
+      id: "transcript",
+      label: copy.transcript.title,
+      content: !hasTranscript ? (
+        <p className={styles.muted}>{copy.transcript.notYet}</p>
+      ) : transcript.isPending ? (
+        <p className={styles.muted}>{copy.common.loading}</p>
+      ) : transcript.isError ? (
+        <p role="alert">{errorText(transcript.error)}</p>
+      ) : (
+        <TranscriptPanel
+          segments={transcript.data.segments}
+          currentTimeSec={currentTimeSec}
+          onSeek={seek}
+        />
+      ),
+    },
+  ];
+
+  const stages = (
+    <section className={styles.section} aria-labelledby="stages-title">
+      <div className={styles.sectionHead}>
+        <h2 id="stages-title" className={styles.subtitle}>
+          {copy.job.stagesTitle}
+        </h2>
+        {isActive && <span className={styles.num}>{copy.job.progress(toPercent(progress))}</span>}
+      </div>
+      {isActive && <ProgressBar value={progress} label={copy.job.stagesTitle} />}
+      <StageList stages={ANALYSIS_STAGE_IDS.map((id) => ({ id, state: job.stages[id] }))} />
+    </section>
+  );
 
   return (
     <div className={styles.page}>
       <Link to="/" className={styles.back}>
         ← {copy.job.back}
       </Link>
+      <JobHeader job={job} onDeleted={onDeleted} />
 
-      <header className={styles.header}>
-        <div className={styles.headText}>
-          <div className={styles.titleRow}>
-            <h1 className={styles.title}>{jobDisplayTitle(job)}</h1>
-            <StatusBadge tone={jobStatusTone[job.status]} label={copy.jobStatus[job.status]} />
+      {sourcePath ? (
+        <div className={styles.workbench}>
+          <div className={styles.main}>
+            <SourcePlayer
+              jobId={job.id}
+              sourcePath={sourcePath}
+              hasTranscript={hasTranscript}
+              language={job.settings.language}
+              videoRef={videoRef}
+              onTimeUpdate={setCurrentTimeSec}
+            />
+            {stages}
           </div>
-          <dl className={styles.facts}>
-            <div>
-              <dt>{copy.job.source}</dt>
-              <dd>
-                {job.source.kind === "url" ? (
-                  <a href={job.source.url} target="_blank" rel="noreferrer noopener">
-                    {new URL(job.source.url).hostname}
-                  </a>
-                ) : (
-                  job.source.originalName
-                )}
-              </dd>
-            </div>
-            {job.durationSec !== null && (
-              <div>
-                <dt>{copy.job.duration}</dt>
-                <dd className={styles.num}>{formatDuration(job.durationSec)}</dd>
-              </div>
-            )}
-            <div>
-              <dt>{copy.job.created}</dt>
-              <dd className={styles.num}>{formatDateTime(job.createdAt)}</dd>
-            </div>
-          </dl>
+          <aside className={styles.side}>
+            <Tabs items={panels} activeId={panel} onChange={setPanel} label={copy.job.panels} />
+          </aside>
         </div>
-        <div className={styles.actions}>
-          {isActive && (
-            <Button onClick={() => cancel.mutate(job.id)} isBusy={cancel.isPending}>
-              {copy.job.cancel}
-            </Button>
-          )}
-          {canRetry && (
-            <Button variant="primary" onClick={() => retry.mutate(job.id)} isBusy={retry.isPending}>
-              {copy.job.retry}
-            </Button>
-          )}
-          <Button variant="danger" onClick={() => setIsConfirmingDelete(true)}>
-            {copy.job.delete}
-          </Button>
-        </div>
-      </header>
-
-      {actionError && (
-        <p className={styles.errorBox} role="alert">
-          {errorText(actionError)}
-        </p>
+      ) : (
+        stages
       )}
-      {job.error && (
-        <p className={styles.errorBox} role="alert">
-          {job.error.userMessage}
-        </p>
-      )}
-
-      {job.artifacts.sourceVideo && job.stages.download.status === "done" && (
-        // eslint-disable-next-line jsx-a11y/media-has-caption -- captions do not exist before transcription; TODO(web): add WebVTT track from the transcript (phase 5)
-        <video
-          className={styles.preview}
-          src={api.mediaUrl(job.id, job.artifacts.sourceVideo)}
-          controls
-          preload="metadata"
-          aria-label={copy.job.sourcePreview}
-        />
-      )}
-
-      <section className={styles.section} aria-labelledby="stages-title">
-        <div className={styles.sectionHead}>
-          <h2 id="stages-title" className={styles.subtitle}>
-            {copy.job.stagesTitle}
-          </h2>
-          {isActive && <span className={styles.num}>{copy.job.progress(toPercent(progress))}</span>}
-        </div>
-        {isActive && <ProgressBar value={progress} label={copy.job.stagesTitle} />}
-        <StageList stages={ANALYSIS_STAGE_IDS.map((id) => ({ id, state: job.stages[id] }))} />
-      </section>
-
-      <ConfirmDialog
-        isOpen={isConfirmingDelete}
-        title={copy.job.deleteTitle}
-        body={copy.job.deleteBody}
-        confirmLabel={copy.job.deleteConfirm}
-        isBusy={remove.isPending}
-        onClose={() => setIsConfirmingDelete(false)}
-        onConfirm={() =>
-          remove.mutate(job.id, {
-            onSuccess: () => {
-              setIsConfirmingDelete(false);
-              onDeleted();
-            },
-          })
-        }
-      />
     </div>
   );
 }

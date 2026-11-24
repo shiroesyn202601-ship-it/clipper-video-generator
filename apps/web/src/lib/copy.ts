@@ -79,10 +79,16 @@ export const copy = {
     stagesTitle: "Tahap proses",
     openLog: "Log",
     sourcePreview: "Pratinjau video sumber",
+    panels: "Panel job",
     source: "Sumber",
     duration: "Durasi",
     created: "Dibuat",
     progress: (percent: number) => `${percent}% selesai`,
+  },
+  transcript: {
+    title: "Transkrip",
+    notYet: "Transkrip muncul setelah tahap Transkrip selesai.",
+    empty: "Tidak ada ucapan yang terdeteksi di video ini.",
   },
   jobStatus: {
     queued: "Antre",

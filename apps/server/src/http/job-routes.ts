@@ -2,6 +2,8 @@ import path from "node:path";
 import {
   createJobBodySchema,
   jobSettingsInputSchema,
+  transcriptSchema,
+  type Transcript,
   type Job,
   type JobEvent,
   type JobSettingsInput,
@@ -13,6 +15,7 @@ import type { JobService } from "../jobs/job-service.ts";
 import type { JobStore } from "../jobs/job-store.ts";
 import { AppError } from "../lib/errors.ts";
 import { resolveInside } from "../lib/fs-utils.ts";
+import { transcriptToVtt } from "../pipeline/transcript/normalize.ts";
 import { parseInput } from "./validate.ts";
 
 function parseJsonField(value: unknown): unknown {
@@ -81,6 +84,17 @@ export function registerJobRoutes(
     const jobDir = store.jobDir(id);
     const absolute = resolveInside(jobDir, relative);
     return reply.sendFile(path.relative(jobDir, absolute), jobDir);
+  });
+
+  app.get("/jobs/:id/transcript", async (request): Promise<Transcript> => {
+    const { id } = parseInput(jobParamsSchema, request.params);
+    return service.readArtifact(id, "transcript", transcriptSchema);
+  });
+
+  app.get("/jobs/:id/transcript.vtt", async (request, reply) => {
+    const { id } = parseInput(jobParamsSchema, request.params);
+    const transcript = await service.readArtifact(id, "transcript", transcriptSchema);
+    return reply.type("text/vtt; charset=utf-8").send(transcriptToVtt(transcript));
   });
 
   app.get("/jobs/:id", (request): Job => {

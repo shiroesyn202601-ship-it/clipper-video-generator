@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { parseFfmpegProgressLine, parseFrameRate } from "./ffmpeg.ts";
+import { parseWhisperProgress } from "./whisper.ts";
 import { createDownloadProgress, extractYtdlpError, parseYtdlpProgress } from "./ytdlp.ts";
 
 describe("ffmpeg parsers", () => {
@@ -13,6 +14,13 @@ describe("ffmpeg parsers", () => {
     expect(parseFrameRate("30000/1001")).toBeCloseTo(29.97, 2);
     expect(parseFrameRate("25/1")).toBe(25);
     expect(parseFrameRate("0/0")).toBeNull();
+  });
+});
+
+describe("whisper parser", () => {
+  it("reads the progress callback line", () => {
+    expect(parseWhisperProgress("whisper_print_progress_callback: progress =  45%")).toBe(0.45);
+    expect(parseWhisperProgress("whisper_init_from_file")).toBeNull();
   });
 });
 

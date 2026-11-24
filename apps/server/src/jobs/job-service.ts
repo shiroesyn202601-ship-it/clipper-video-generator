@@ -9,17 +9,19 @@ import {
   createStageState,
   jobSettingsSchema,
   type Job,
+  type JobArtifacts,
   type JobSettingsInput,
   type JobSource,
   type JobSummary,
 } from "@clipper/shared";
+import type { z } from "zod";
 import { parseInput } from "../http/validate.ts";
 import { AppError } from "../lib/errors.ts";
-import { sanitizeFileName } from "../lib/fs-utils.ts";
+import { readJson, resolveInside, sanitizeFileName } from "../lib/fs-utils.ts";
 import type { JobQueue } from "./job-queue.ts";
+import type { JobStore } from "./job-store.ts";
 
 const ALLOWED_UPLOAD_EXTENSIONS = new Set([".mp4", ".mkv", ".mov", ".m4v", ".webm"]);
-import type { JobStore } from "./job-store.ts";
 
 function newAnalysisStages(): Job["stages"] {
   return Object.fromEntries(
@@ -122,6 +124,25 @@ export class JobService {
     return this.#store.update(job.id, (draft) => {
       draft.artifacts.sourceVideo = `source/upload${extension}`;
     });
+  }
+
+  /** Reads a JSON artifact (transcript, candidates…) of a job, 404 if the stage has not run. */
+  async readArtifact<T extends z.ZodTypeAny>(
+    jobId: string,
+    key: keyof JobArtifacts,
+    schema: T,
+  ): Promise<z.infer<T>> {
+    const job = this.#store.get(jobId);
+    const relative = job.artifacts[key];
+    if (!relative) {
+      throw new AppError({
+        code: "ARTIFACT_NOT_READY",
+        message: `Artifact ${key} not available for job ${jobId}`,
+        userMessage: "Data ini belum tersedia. Tunggu sampai tahapnya selesai.",
+        statusCode: 404,
+      });
+    }
+    return readJson(resolveInside(this.#store.jobDir(jobId), relative), schema);
   }
 
   start(jobId: string): void {

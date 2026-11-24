@@ -3,6 +3,7 @@ import { denoiseStage } from "./denoise.ts";
 import { downloadStage } from "./download.ts";
 import { extractAudioStage } from "./extract-audio.ts";
 import { separateVocalsStage } from "./separate-vocals.ts";
+import { transcribeStage } from "./transcribe.ts";
 import { simulatedAnalysisStages, simulatedClipStages } from "./simulated.ts";
 
 const simulated = (id: AnalysisStage["id"]): AnalysisStage => {
@@ -17,7 +18,7 @@ export const analysisStages: readonly AnalysisStage[] = [
   extractAudioStage,
   separateVocalsStage,
   denoiseStage,
-  simulated("transcribe"),
+  transcribeStage,
   simulated("find-moments"),
 ];
 

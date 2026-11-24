@@ -1,0 +1,71 @@
+.header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-4);
+}
+
+.headText {
+  display: grid;
+  gap: var(--space-3);
+  min-width: 0;
+  flex: 1;
+}
+
+.titleRow {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  min-width: 0;
+}
+
+.title {
+  min-width: 0;
+  overflow: hidden;
+  font-size: var(--text-2xl);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.facts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-5);
+  margin: 0;
+  font-size: var(--text-sm);
+}
+
+.facts div {
+  display: flex;
+  gap: var(--space-2);
+}
+
+.facts dt {
+  color: var(--color-text-faint);
+}
+
+.facts dd {
+  margin: 0;
+  color: var(--color-text-muted);
+}
+
+.facts a {
+  color: var(--color-text-muted);
+}
+
+.num {
+  font-variant-numeric: tabular-nums;
+}
+
+.actions {
+  display: flex;
+  gap: var(--space-2);
+}
+
+.errorBox {
+  padding: var(--space-3) var(--space-4);
+  border: 1px solid var(--color-danger);
+  border-radius: var(--radius-md);
+  background: var(--color-danger-soft);
+}
