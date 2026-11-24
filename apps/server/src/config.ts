@@ -71,6 +71,8 @@ function loadConfig() {
     }),
     faceModel: path.resolve(REPO_ROOT, env.FACE_MODEL),
     fontsDir: path.resolve(REPO_ROOT, env.FONTS_DIR),
+    /** Brand kit uploads (logo, overlays). */
+    brandDir: path.join(path.resolve(REPO_ROOT, env.WORKSPACE_DIR), "brand"),
     demucs: Object.freeze({ model: env.DEMUCS_MODEL, device: env.DEMUCS_DEVICE }),
     groq: Object.freeze({
       apiKeys: Object.freeze(parseApiKeys(env.GROQ_API_KEYS)),

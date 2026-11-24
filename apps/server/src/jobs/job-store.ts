@@ -51,7 +51,9 @@ export class JobStore {
         const job = await readJson(file, jobSchema);
         this.#jobs.set(job.id, job);
       } catch (error) {
-        if ((error as NodeJS.ErrnoException).code === "ENOENT") continue;
+        // ENOTDIR: workspace/settings.json and other files next to the job folders.
+        const code = (error as NodeJS.ErrnoException).code;
+        if (code === "ENOENT" || code === "ENOTDIR") continue;
         this.#logger.warn({ file, error: errorMessage(error) }, "skipping unreadable job file");
       }
     }

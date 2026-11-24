@@ -7,6 +7,15 @@ import {
 import type { FastifyBaseLogger } from "fastify";
 import { readJson, writeJsonAtomic } from "../lib/fs-utils.ts";
 
+/** Reads workspace/settings.json; defaults when it is missing or broken (used by render). */
+export async function readAppSettings(workspaceDir: string): Promise<AppSettings> {
+  try {
+    return await readJson(path.join(workspaceDir, "settings.json"), appSettingsSchema);
+  } catch {
+    return appSettingsSchema.parse({});
+  }
+}
+
 /** App-wide preferences in workspace/settings.json (created on the first change). */
 export class SettingsStore {
   readonly #filePath: string;

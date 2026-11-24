@@ -344,6 +344,13 @@ Tanpa AI cloud. Algoritma di `apps/server/src/pipeline/moments/` dipecah menjadi
 - Font dari `FONTS_DIR` disalin ke `clips/<id>/fonts/` lalu filter `ass=captions.ass:fontsdir=fonts`.
 - Preset: Tebal kuning, Pill ungu, Karaoke, Kotak bersih, Komik. Default untuk klip baru disimpan di `workspace/settings.json` (`GET/PATCH /api/settings`); `GET /api/fonts` melaporkan font yang sudah diunduh.
 
+### 7.12 Brand kit: logo, overlay, tint (opsional, kompatibel mundur)
+
+- `AppSettings.brand` (`packages/shared/src/brand.ts`) disimpan di `workspace/settings.json`; file di `workspace/brand/` dengan nama buatan server (`logo-xxxxxxxx.png`, `overlay-xxxxxxxx.webm`). Upload: `POST /api/brand/files` (multipart, field `kind` lalu `file`), pratinjau: `GET /api/brand/files/:file`. Halaman web: `/brand`.
+- Default **nonaktif** dan kosong, jadi render klip lama identik dengan sebelumnya. `Clip.useBrand` (default `true`) memungkinkan tiap klip mematikannya.
+- Logo: 9 posisi, lebar %, opasitas, margin. Overlay (maks. 8): PNG/JPG/WEBP/GIF/MP4/WEBM/MOV, posisi termasuk layar penuh, tampil sepanjang klip / hanya di awal / hanya di akhir (N detik), opsi hapus latar hijau (`colorkey`). Tint: warna + opasitas, dari bawah/atas/keduanya/rata, jangkauan %.
+- Render (`pipeline/brand/brand-filter.ts` + `stages/render.ts`): bila brand aktif, `-vf` diganti `-filter_complex`: tint (PNG dari `lavfi color` + `geq`, `clips/<id>/tint.png`) di bawah subtitle, lalu `ass`, lalu overlay dan logo di atasnya. File brand yang sudah terhapus dari disk dilewati.
+
 ## 8. UI / UX (apps/web)
 
 Saat membangun halaman, jalankan skill **hallmark** (`/hallmark`). Setelahnya, rapikan dengan prinsip **make-interfaces-feel-better**. Patuhi larangan anti-slop di CLAUDE.md bagian 5.

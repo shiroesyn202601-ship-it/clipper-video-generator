@@ -1,13 +1,22 @@
+import { existsSync } from "node:fs";
 import { appendFile, copyFile, mkdir, writeFile } from "node:fs/promises";
 import path from "node:path";
-import { CAPTION_FONTS, RENDER_SETTINGS, type CaptionStyle } from "@clipper/shared";
+import {
+  CAPTION_FONTS,
+  RENDER_SETTINGS,
+  isBrandActive,
+  type BrandKit,
+  type CaptionStyle,
+} from "@clipper/shared";
 import type { Config } from "../../config.ts";
 import { AppError } from "../../lib/errors.ts";
 import { toJobRelative } from "../../lib/fs-utils.ts";
 import { probeMedia, runFfmpeg } from "../../tools/ffmpeg.ts";
+import { readAppSettings } from "../../settings/settings-store.ts";
+import { buildBrandGraph, tintFilterExpression } from "../brand/brand-filter.ts";
 import { buildAss } from "../captions/ass.ts";
 import { buildStyledAss } from "../captions/styled-ass.ts";
-import type { ClipStage } from "../stage.ts";
+import type { ClipStage, ClipStageContext } from "../stage.ts";
 
 /** Allowed difference between the rendered and the requested clip length (seconds). */
 const DURATION_TOLERANCE_SEC = 0.5;
@@ -42,6 +51,80 @@ async function prepareFont(
   }
 }
 
+/** Drops brand files that were deleted from disk, so a missing logo never fails a render. */
+function withExistingFiles(brand: BrandKit, brandDir: string): BrandKit {
+  const exists = (file: string): boolean => existsSync(path.join(brandDir, file));
+  return {
+    ...brand,
+    logo: { ...brand.logo, file: brand.logo.file && exists(brand.logo.file) ? brand.logo.file : null },
+    overlays: brand.overlays.filter((overlay) => exists(overlay.file)),
+  };
+}
+
+/**
+ * Inputs + filter_complex with the brand kit: tint under the captions, then overlays and
+ * the logo on top. Input 0 = reframed video, 1 = audio, 2 = tint image (if any), then brand files.
+ */
+async function brandVideoArgs(
+  context: ClipStageContext,
+  brand: BrandKit,
+  subtitles: string,
+  durationSec: number,
+): Promise<string[]> {
+  const inputs: string[] = [];
+  const filters: string[] = [];
+  let current = "[0:v]";
+  let nextInput = 2;
+  if (brand.tint.enabled) {
+    const tintPath = path.join(context.clipDir, "tint.png");
+    await runFfmpeg({
+      config: context.config,
+      args: [
+        "-f",
+        "lavfi",
+        "-i",
+        `color=c=black:s=${RENDER_SETTINGS.width}x${RENDER_SETTINGS.height}`,
+        "-frames:v",
+        "1",
+        "-vf",
+        tintFilterExpression(brand.tint),
+        "-update",
+        "1",
+      ],
+      outputPath: tintPath,
+      durationSec: 0,
+      signal: context.signal,
+      logFile: context.logFile,
+      errorCode: "RENDER_FAILED",
+      userMessage: "Lapisan warna (tint) brand kit gagal dibuat. Lihat log.",
+    });
+    inputs.push("-loop", "1", "-framerate", String(RENDER_SETTINGS.fps), "-i", "tint.png");
+    filters.push(`[0:v][${nextInput}:v]overlay=0:0:shortest=1:format=auto[tinted]`);
+    current = "[tinted]";
+    nextInput += 1;
+  }
+  filters.push(`${current}${subtitles}[captioned]`);
+  const graph = buildBrandGraph({
+    brand,
+    brandDir: context.config.brandDir,
+    width: RENDER_SETTINGS.width,
+    durationSec,
+    fps: RENDER_SETTINGS.fps,
+    firstInput: nextInput,
+    inputLabel: "[captioned]",
+  });
+  return [
+    ...inputs,
+    ...graph.inputs,
+    "-filter_complex",
+    [...filters, ...graph.filters].join(";"),
+    "-map",
+    graph.outputLabel,
+    "-map",
+    "1:a:0",
+  ];
+}
+
 export const renderStage: ClipStage = {
   id: "render",
   run: async (context) => {
@@ -59,6 +142,17 @@ export const renderStage: ClipStage = {
       : "";
     await writeFile(path.join(context.clipDir, "captions.ass"), ass, "utf8");
 
+    const subtitles = `ass=captions.ass${fontOption}`;
+    const brand = withExistingFiles(
+      (await readAppSettings(context.config.workspaceDir)).brand,
+      context.config.brandDir,
+    );
+    // Without an active brand kit the command is exactly the pre-brand one.
+    const videoArgs =
+      clip.useBrand && isBrandActive(brand)
+        ? await brandVideoArgs(context, brand, subtitles, durationSec)
+        : ["-map", "0:v:0", "-map", "1:a:0", "-vf", subtitles];
+
     const outputPath = path.join(context.clipDir, "final.mp4");
     await runFfmpeg({
       config: context.config,
@@ -69,12 +163,7 @@ export const renderStage: ClipStage = {
         "reframed.mp4",
         "-i",
         "audio.wav",
-        "-map",
-        "0:v:0",
-        "-map",
-        "1:a:0",
-        "-vf",
-        `ass=captions.ass${fontOption}`,
+        ...videoArgs,
         "-r",
         String(RENDER_SETTINGS.fps),
         "-c:v",

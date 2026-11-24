@@ -1,5 +1,6 @@
 import {
   appSettingsSchema,
+  brandUploadResultSchema,
   healthReportSchema,
   jobSchema,
   jobSummarySchema,
@@ -168,6 +169,20 @@ export const api = {
   /** Font name → downloaded (SETUP.md step 5c). */
   getFonts: (signal?: AbortSignal): Promise<Record<string, boolean>> =>
     request("/fonts", { schema: z.record(z.boolean()), ...(signal ? { signal } : {}) }),
+
+  uploadBrandFile: async (kind: "logo" | "overlay", file: File): Promise<string> => {
+    const form = new FormData();
+    form.append("kind", kind); // must precede the file
+    form.append("file", file);
+    const result = await request("/brand/files", {
+      method: "POST",
+      formData: form,
+      schema: brandUploadResultSchema,
+    });
+    return result.file;
+  },
+
+  brandFileUrl: (file: string): string => `${API_BASE}/brand/files/${encodeURIComponent(file)}`,
 
   fontUrl: (file: string): string => `${API_BASE}/fonts/${encodeURIComponent(file)}`,
 

@@ -41,6 +41,7 @@ export const updateClipBodySchema = z
     endSec: z.number().nonnegative(),
     captions: z.array(captionSchema).max(500),
     captionStyle: captionStyleSchema.nullable(),
+    useBrand: z.boolean(),
   })
   .partial();
 export type UpdateClipBody = z.infer<typeof updateClipBodySchema>;

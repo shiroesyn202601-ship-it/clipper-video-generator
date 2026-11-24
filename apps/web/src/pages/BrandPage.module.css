@@ -1,0 +1,249 @@
+.page {
+  display: grid;
+  gap: var(--space-4);
+}
+
+.title {
+  font-size: var(--text-2xl);
+}
+
+.intro {
+  max-width: 68ch;
+  color: var(--color-text-muted);
+}
+
+.layout {
+  display: grid;
+  grid-template-columns: minmax(200px, 280px) 1fr;
+  gap: var(--space-6, 32px);
+  align-items: start;
+}
+
+@media (max-width: 760px) {
+  .layout {
+    grid-template-columns: 1fr;
+  }
+}
+
+.previewColumn {
+  position: sticky;
+  top: var(--space-4);
+}
+
+@media (max-width: 760px) {
+  .previewColumn {
+    position: static;
+    max-width: 240px;
+  }
+}
+
+/* 9:16 frame; cqw units let margins follow the frame width like the ffmpeg overlay. */
+.preview {
+  position: relative;
+  aspect-ratio: 9 / 16;
+  overflow: hidden;
+  border-radius: var(--radius-md, 12px);
+  background: linear-gradient(180deg, #8a9098 0%, #3a3f45 100%);
+  container-type: inline-size;
+}
+
+.tint {
+  position: absolute;
+  inset: 0;
+}
+
+.layer {
+  position: absolute;
+  display: block;
+  height: auto;
+}
+
+.sampleCaption {
+  position: absolute;
+  top: 68%;
+  left: 6%;
+  right: 6%;
+  margin: 0;
+  transform: translateY(-50%);
+  color: #fff;
+  font-size: 7cqw;
+  font-weight: 800;
+  text-align: center;
+  text-transform: uppercase;
+  -webkit-text-stroke: 0.6cqw #000;
+  paint-order: stroke fill;
+}
+
+.controls {
+  display: grid;
+  gap: var(--space-5);
+  min-width: 0;
+}
+
+.section {
+  display: grid;
+  gap: var(--space-3);
+  padding-top: var(--space-4);
+  border-top: 1px solid var(--color-border);
+}
+
+.sectionTitle {
+  font-size: var(--text-lg);
+}
+
+.overlay {
+  display: grid;
+  gap: var(--space-3);
+  padding: var(--space-3);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: var(--space-3) var(--space-4);
+}
+
+.field {
+  display: grid;
+  gap: var(--space-2);
+  align-content: start;
+  min-width: 0;
+}
+
+.label {
+  color: var(--color-text-muted);
+  font-size: var(--text-sm);
+  font-weight: 550;
+}
+
+.labelRow {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-2);
+}
+
+.value {
+  font-size: var(--text-sm);
+  font-variant-numeric: tabular-nums;
+}
+
+.control {
+  width: 100%;
+  min-height: var(--hit-min);
+  padding: 0 var(--space-3);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface-sunken);
+  transition: border-color var(--duration-fast) var(--ease-out);
+}
+
+.control:hover {
+  border-color: var(--color-border-strong);
+}
+
+.field input[type="range"] {
+  width: 100%;
+  min-height: var(--hit-min);
+  accent-color: var(--color-accent);
+}
+
+.check,
+.color {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: var(--hit-min);
+}
+
+.check input {
+  width: 18px;
+  height: 18px;
+  accent-color: var(--color-accent);
+}
+
+.color input {
+  width: 40px;
+  height: 40px;
+  padding: 2px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface-sunken);
+}
+
+.fileRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.thumb {
+  width: 56px;
+  height: 56px;
+  object-fit: contain;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: repeating-conic-gradient(#d8dbe0 0% 25%, #fff 0% 50%) 50% / 12px 12px;
+}
+
+.upload {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--hit-min);
+  padding: 0 var(--space-4);
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-sm);
+  font-weight: 600;
+  cursor: pointer;
+  transition:
+    background-color var(--duration-fast) var(--ease-out),
+    transform var(--duration-fast) var(--ease-out);
+}
+
+.upload:hover {
+  background: var(--color-surface-sunken);
+}
+
+.upload:active {
+  transform: scale(0.96);
+}
+
+.upload:focus-within {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+}
+
+.uploadDisabled {
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+.fileInput {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.muted {
+  color: var(--color-text-faint);
+  font-size: var(--text-sm);
+}
+
+.error {
+  color: var(--color-danger, #c0392b);
+}
+
+.saveBar {
+  display: flex;
+  justify-content: flex-end;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .upload {
+    transition: none;
+  }
+}

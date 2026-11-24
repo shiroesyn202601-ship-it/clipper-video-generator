@@ -4,6 +4,7 @@ import fastifyMultipart from "@fastify/multipart";
 import fastifyStatic from "@fastify/static";
 import Fastify, { type FastifyInstance } from "fastify";
 import type { Config } from "./config.ts";
+import { registerBrandRoutes } from "./http/brand-routes.ts";
 import { registerClipRoutes } from "./http/clip-routes.ts";
 import { registerHealthRoutes } from "./http/health-routes.ts";
 import { registerJobRoutes } from "./http/job-routes.ts";
@@ -73,6 +74,7 @@ export async function buildApp(config: Config): Promise<FastifyInstance> {
       registerJobRoutes(api, { service, store });
       registerClipRoutes(api, { clips });
       registerSettingsRoutes(api, { config, settings });
+      registerBrandRoutes(api, { brandDir: config.brandDir });
       done();
     },
     { prefix: "/api" },

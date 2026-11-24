@@ -81,6 +81,7 @@ function ClipEditor({ job, clip, number, onDeleted }: ClipEditorProps) {
   const [draftCaptions, setDraftCaptions] = useState<Caption[] | null>(null);
   /** undefined = unchanged; null = back to the legacy look. */
   const [draftStyle, setDraftStyle] = useState<CaptionStyle | null | undefined>(undefined);
+  const [draftUseBrand, setDraftUseBrand] = useState<boolean | undefined>(undefined);
   const settings = useAppSettings();
   const saveSettings = useUpdateAppSettings();
   const [isConfirmingDelete, setIsConfirmingDelete] = useState(false);
@@ -91,7 +92,10 @@ function ClipEditor({ job, clip, number, onDeleted }: ClipEditorProps) {
   const captionStyle = draftStyle === undefined ? clip.captionStyle : draftStyle;
   const isDefaultStyle =
     JSON.stringify(settings.data?.defaultCaptionStyle ?? null) === JSON.stringify(captionStyle);
-  const isDirty = draftCaptions !== null || draftStyle !== undefined;
+  const useBrand = draftUseBrand ?? clip.useBrand;
+  const isBrandEnabled = settings.data?.brand.enabled === true;
+  const isDirty =
+    draftCaptions !== null || draftStyle !== undefined || draftUseBrand !== undefined;
   const sentences = useMemo(
     () => (transcript.data ? splitSentences(transcript.data) : []),
     [transcript.data],
@@ -108,6 +112,7 @@ function ClipEditor({ job, clip, number, onDeleted }: ClipEditorProps) {
   const discardDrafts = (): void => {
     setDraftCaptions(null);
     setDraftStyle(undefined);
+    setDraftUseBrand(undefined);
   };
 
   const handleRender = (): void => {
@@ -120,6 +125,7 @@ function ClipEditor({ job, clip, number, onDeleted }: ClipEditorProps) {
       {
         ...(draftCaptions ? { captions: draftCaptions } : {}),
         ...(draftStyle !== undefined ? { captionStyle: draftStyle } : {}),
+        ...(draftUseBrand !== undefined ? { useBrand: draftUseBrand } : {}),
       },
       {
         onSuccess: () => {
@@ -200,6 +206,26 @@ function ClipEditor({ job, clip, number, onDeleted }: ClipEditorProps) {
               onChange={setDraftStyle}
               onSaveDefault={(style) => saveSettings.mutate({ defaultCaptionStyle: style })}
             />
+          </section>
+
+          <section className={styles.section} aria-labelledby="brand-title">
+            <h2 id="brand-title" className={styles.subtitle}>
+              {copy.brand.title}
+            </h2>
+            <label className={styles.brandToggle}>
+              <input
+                type="checkbox"
+                checked={useBrand}
+                disabled={isBusy}
+                onChange={(event) => setDraftUseBrand(event.target.checked)}
+              />
+              <span>{copy.brand.useBrand}</span>
+            </label>
+            {!isBrandEnabled && (
+              <p className={styles.hint}>
+                <Link to="/brand">{copy.brand.brandOff}</Link>
+              </p>
+            )}
           </section>
 
           <div className={styles.renderBar}>

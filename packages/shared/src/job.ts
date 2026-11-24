@@ -150,6 +150,8 @@ export const clipSchema = z.object({
   renderRequestedAt: z.string().nullable().default(null),
   /** null = legacy look from JobSettings.subtitleStyle (clips made before caption styling). */
   captionStyle: captionStyleSchema.nullable().default(null),
+  /** Apply the brand kit (logo, overlays, tint) when the kit is enabled. */
+  useBrand: z.boolean().default(true),
 });
 export type Clip = z.infer<typeof clipSchema>;
 

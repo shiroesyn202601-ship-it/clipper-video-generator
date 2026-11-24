@@ -1,5 +1,6 @@
 export * from "./api.ts";
 export * from "./app-settings.ts";
+export * from "./brand.ts";
 export * from "./caption-style.ts";
 export * from "./defaults.ts";
 export * from "./health.ts";

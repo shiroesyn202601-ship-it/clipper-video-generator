@@ -75,6 +75,7 @@ export class ClipService {
       error: null,
       renderRequestedAt: null,
       captionStyle: this.#settings.get().defaultCaptionStyle,
+      useBrand: true,
     };
     await this.#store.update(jobId, (draft) => {
       draft.clips.push(clip);
@@ -102,7 +103,7 @@ export class ClipService {
     if (isRangeChanged) this.#validateRange(job, startSec, endSec);
     const captions =
       body.captions ?? (isRangeChanged ? await this.#captionsFor(jobId, startSec, endSec) : null);
-    const isStyleChanged = body.captionStyle !== undefined;
+    const isStyleChanged = body.captionStyle !== undefined || body.useBrand !== undefined;
 
     const updated = await this.#store.update(jobId, (draft) => {
       const target = this.#find(draft, clipId);
@@ -110,6 +111,7 @@ export class ClipService {
       target.endSec = endSec;
       if (captions) target.captions = captions;
       if (body.captionStyle !== undefined) target.captionStyle = body.captionStyle;
+      if (body.useBrand !== undefined) target.useBrand = body.useBrand;
       if (isRangeChanged) target.stages = newClipStages();
       else if (captions || isStyleChanged) target.stages.render = createStageState();
       if (isRangeChanged || captions || isStyleChanged) {

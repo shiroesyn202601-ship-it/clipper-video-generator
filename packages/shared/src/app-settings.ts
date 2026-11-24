@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { brandKitSchema } from "./brand.ts";
 import { captionStyleSchema } from "./caption-style.ts";
 
 /**
@@ -8,6 +9,7 @@ import { captionStyleSchema } from "./caption-style.ts";
 export const appSettingsSchema = z.object({
   /** Style given to new clips; null = legacy look from the job settings. */
   defaultCaptionStyle: captionStyleSchema.nullable().default(null),
+  brand: brandKitSchema.default({}),
 });
 export type AppSettings = z.infer<typeof appSettingsSchema>;
 

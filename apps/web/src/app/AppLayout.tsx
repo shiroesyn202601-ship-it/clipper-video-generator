@@ -30,6 +30,9 @@ export function AppLayout() {
           <NavLink to="/" end className={navClass}>
             {copy.nav.newJob}
           </NavLink>
+          <NavLink to="/brand" className={navClass}>
+            {copy.nav.brand}
+          </NavLink>
           <NavLink to="/tools" className={navClass}>
             {copy.nav.tools}
           </NavLink>
