@@ -10,6 +10,8 @@ export const DEFAULT_JOB_SETTINGS = {
   maxCandidates: 10,
   separateVocals: true,
   denoise: true,
+  /** Use Groq's free Whisper API when GROQ_API_KEYS is set; whisper.cpp is the fallback. */
+  onlineTranscribe: true,
   musicVolume: 0,
   subtitleStyle: "bold-center",
 } as const;

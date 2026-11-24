@@ -120,6 +120,15 @@ export function SettingsFields({ value, onChange }: SettingsFieldsProps) {
         />
         <span>{copy.newJob.denoise}</span>
       </label>
+
+      <label className={styles.check}>
+        <input
+          type="checkbox"
+          checked={value.onlineTranscribe}
+          onChange={(event) => set("onlineTranscribe", event.target.checked)}
+        />
+        <span>{copy.newJob.onlineTranscribe}</span>
+      </label>
     </div>
   );
 }

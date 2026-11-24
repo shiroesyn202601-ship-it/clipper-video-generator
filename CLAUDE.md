@@ -48,6 +48,7 @@ memakai layanan online pihak ketiga **asalkan gratis**. Aturan lengkapnya ada di
 | 8   | UI anti "AI slop"            | **hallmark** (agent skill)                                                       | https://github.com/nutlope/hallmark                                    |
 | 9   | Beresin detail kecil UI      | **make-interfaces-feel-better** (agent skill)                                    | https://github.com/jakubkrehel/make-interfaces-feel-better             |
 | 10  | Finishing UI                 | **benjitaylor/skills** (skill _stageshow_)                                       | https://github.com/benjitaylor/skills                                  |
+| 11  | Transkrip online cepat (opsional, gratis) | **Groq API** (whisper-large-v3-turbo, free tier) — fallback ke whisper.cpp | https://console.groq.com/docs/speech-to-text |
 
 > **Catatan tool #7 (24 Nov 2026):** editly (https://github.com/mifi/editly) awalnya dipilih, tetapi dependency native-nya
 > (`gl@5`, `canvas@2`) hanya punya binary untuk Node 12–16 dan gagal di-compile pada Node modern di Windows.
@@ -69,7 +70,7 @@ Pendukung wajib: **Node.js LTS**, **Python 3.10+**, **ffmpeg + ffprobe** di PATH
 ### Arsitektur yang disepakati
 
 - `apps/web` — frontend **React** (Vite + TypeScript). Hanya UI; tidak menjalankan proses berat.
-- `apps/server` — backend **Node.js** lokal. Mengorkestrasi pipeline: memanggil CLI (yt-dlp, whisper.cpp, ffmpeg), menyusun subtitle ASS untuk render, dan memanggil worker Python.
+- `apps/server` — backend **Node.js** lokal. Mengorkestrasi pipeline: memanggil CLI (yt-dlp, whisper.cpp, ffmpeg), memanggil Groq API untuk transkrip online (opsional, dengan rotasi beberapa API key), menyusun subtitle ASS untuk render, dan memanggil worker Python.
 - `workers/` — script **Python** untuk demucs, DeepFilterNet, OpenCV + Norfair. Dipanggil oleh server lewat proses anak (child process) dengan input/output berupa path file + JSON.
 - `tools/` — binary lokal (mis. build whisper.cpp) dan model (mis. `ggml-*.bin`). **Tidak di-commit.**
 - `workspace/` — file kerja per job (video sumber, audio, transkrip, hasil render). **Tidak di-commit.**

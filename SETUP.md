@@ -133,6 +133,31 @@ curl -L -o tools/whisper.cpp/models/ggml-medium.bin https://huggingface.co/ggerg
 
 ---
 
+## 4b. (Opsional) Transkrip online gratis dengan Groq
+
+Transkrip lewat Groq jauh lebih cepat daripada whisper.cpp di CPU. Audio podcast (hanya audio, bukan video) dikirim ke Groq.
+Kalau `GROQ_API_KEYS` kosong, kuota habis, atau Groq error, aplikasi otomatis memakai whisper.cpp lokal, jadi langkah 4 tetap wajib.
+
+1. Daftar gratis di https://console.groq.com (tanpa kartu kredit).
+2. Buka **API Keys** → **Create API Key**, lalu salin key-nya (diawali `gsk_`).
+3. Isi di `.env` (langkah 6). Boleh lebih dari satu key, dipisah koma:
+
+   ```bash
+   GROQ_API_KEYS=gsk_key_pertama,gsk_key_kedua
+   ```
+
+   Saat satu key terkena batas free tier (HTTP 429), aplikasi pindah ke key berikutnya. Key yang ditolak (401/403) dilewati sampai server di-restart.
+
+4. Restart server. Di form job baru, centang **Transkrip online gratis (Groq)** (default aktif).
+
+Catatan:
+
+- Batas free tier Groq ditentukan per akun. Lihat angkanya di https://console.groq.com/settings/limits.
+- Audio dipotong per ±10 menit di titik hening (FLAC 16 kHz mono) agar di bawah batas unggah 25 MB. Hasil tiap potongan disimpan di `workspace/<job>/transcript/groq/`, jadi kalau gagal di tengah jalan, potongan yang sudah selesai tidak dikirim ulang.
+- Tahap Transkrip di halaman job menunjukkan apakah transkrip dibuat oleh Groq atau whisper lokal, beserta alasannya kalau pindah ke lokal.
+
+---
+
 ## 5. Model deteksi wajah (YuNet)
 
 ```bash
@@ -164,6 +189,7 @@ cp .env.example .env
 ```
 
 Default sudah sesuai dengan langkah di atas untuk Windows. Untuk macOS/Linux, ubah `PYTHON_BIN`, `YTDLP_BIN`, dan `WHISPER_BIN` sesuai komentar di file tersebut. Path relatif dihitung dari root repo. Jika `.env` tidak ada, server memakai nilai default yang sama.
+Untuk transkrip online, isi `GROQ_API_KEYS` (langkah 4b). Jangan commit `.env`.
 
 ---
 
@@ -219,6 +245,7 @@ npm run check:py    # ruff + pytest (Python worker)
 - [ ] `.venv` terbentuk dan `import cv2, norfair, demucs, df` sukses
 - [ ] `tools/whisper-bin/whisper-cli.exe` (Windows) atau `tools/whisper.cpp/build/bin/whisper-cli` ada
 - [ ] `tools/whisper.cpp/models/ggml-medium.bin` dan `tools/models/face_detection_yunet_2023mar.onnx` ada
+- [ ] (Opsional) `GROQ_API_KEYS` di `.env` sudah diisi bila ingin transkrip online
 - [ ] `npm run dev`, lalu halaman Status tools menampilkan semua tool dengan status siap
 
 ---
@@ -235,5 +262,6 @@ npm run check:py    # ruff + pytest (Python worker)
 | Status tools: "Subtitle (ffmpeg libass)" belum siap | Build ffmpeg tanpa libass. Pakai build "full" (Windows: `winget install Gyan.FFmpeg`).                                                                                       |
 | Halaman putih setelah `npm run build`               | Muat ulang halaman (Ctrl+F5). Server membaca file build per permintaan, jadi tidak perlu restart.                                                                            |
 | Transkrip kurang akurat                             | Pakai model lebih besar (`ggml-large-v3.bin`) lewat `WHISPER_MODEL`, atau set bahasa yang tepat di Pengaturan lanjutan.                                                      |
+| Transkrip tetap memakai whisper lokal | Lihat pesan di tahap Transkrip dan `workspace/<job>/logs/transcribe.log` (baris `[groq]`). Penyebab umum: `GROQ_API_KEYS` kosong, key salah (401), atau kuota gratis semua key habis (429). Tambah key lain atau tunggu kuota pulih. |
 | Log yt-dlp berisi "n challenge solving failed"      | Deno belum ada di PATH atau paket `yt-dlp-ejs` belum terpasang. Pasang Deno, lalu ulangi `pip install -r workers/requirements.txt`.                                          |
 | `ModuleNotFoundError: torchaudio.backend`           | torchaudio terlalu baru. Ulangi `pip install -r workers/requirements.txt`.                                                                                                   |

@@ -67,6 +67,7 @@ export const jobSettingsSchema = z
       .default(DEFAULT_JOB_SETTINGS.maxCandidates),
     separateVocals: z.boolean().default(DEFAULT_JOB_SETTINGS.separateVocals),
     denoise: z.boolean().default(DEFAULT_JOB_SETTINGS.denoise),
+    onlineTranscribe: z.boolean().default(DEFAULT_JOB_SETTINGS.onlineTranscribe),
     musicVolume: z.number().min(0).max(1).default(DEFAULT_JOB_SETTINGS.musicVolume),
     subtitleStyle: z
       .enum(["bold-center", "lower-third"])

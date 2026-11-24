@@ -58,6 +58,8 @@ export const copy = {
     separateVocals:
       "Pisahkan suara dari musik latar (Demucs). Matikan untuk podcast tanpa musik: jauh lebih cepat",
     denoise: "Bersihkan noise suara (DeepFilterNet). Matikan bila rekaman sudah bersih",
+    onlineTranscribe:
+      "Transkrip online gratis (Groq): audio dikirim ke Groq, jauh lebih cepat. Bila gagal atau kuota habis, otomatis pakai whisper lokal",
     musicVolume: "Volume musik latar di klip",
     musicVolumeValue: (percent: number) => (percent === 0 ? "Dibuang" : `${percent}%`),
     subtitleStyle: "Gaya subtitle",

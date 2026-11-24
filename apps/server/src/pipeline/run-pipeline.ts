@@ -94,8 +94,12 @@ export function createPipelineRunner(deps: PipelineDeps) {
       }
 
       await store.update(jobId, (draft) => markRunning(draft.stages[stage.id]));
+      let doneMessage: string | null = null;
       const context: StageContext = {
         ...baseContext(job, stage.id, signal),
+        setDoneMessage: (message) => {
+          doneMessage = message;
+        },
         reportProgress: (fraction, message) => {
           void store.update(
             jobId,
@@ -114,7 +118,9 @@ export function createPipelineRunner(deps: PipelineDeps) {
         // An abort that happened before the stage subscribed to the signal must still stop it.
         signal.throwIfAborted();
         await stage.run(context);
-        await store.update(jobId, (draft) => markFinished(draft.stages[stage.id], "done", null));
+        await store.update(jobId, (draft) =>
+          markFinished(draft.stages[stage.id], "done", doneMessage),
+        );
         logger.info({ jobId, stage: stage.id }, "stage done");
       } catch (error) {
         await logStageError(context.logFile, error);

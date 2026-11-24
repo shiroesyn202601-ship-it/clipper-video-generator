@@ -11,6 +11,8 @@ export type StageContext = {
   logFile: string;
   /** fraction 0..1 */
   reportProgress: (fraction: number, message?: string) => void;
+  /** Short note kept on the stage once it is done (e.g. which transcriber ran). */
+  setDoneMessage?: (message: string) => void;
   setArtifacts: (patch: Partial<JobArtifacts>) => Promise<void>;
   updateJob: (mutate: (draft: Job) => void) => Promise<void>;
 };

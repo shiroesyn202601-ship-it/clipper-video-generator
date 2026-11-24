@@ -29,7 +29,15 @@ const envSchema = z.object({
   FACE_MODEL: z.string().default("./tools/models/face_detection_yunet_2023mar.onnx"),
   DEMUCS_MODEL: z.string().default("htdemucs"),
   DEMUCS_DEVICE: z.enum(["cpu", "cuda"]).default("cpu"),
+  /** Comma-separated Groq API keys (free tier). Empty = transcribe locally only. */
+  GROQ_API_KEYS: z.string().default(""),
+  GROQ_MODEL: z.string().default("whisper-large-v3-turbo"),
 });
+
+/** "a, b,,c" → ["a", "b", "c"] (duplicates removed). */
+export function parseApiKeys(value: string): string[] {
+  return [...new Set(value.split(/[,\s]+/).map((key) => key.trim()).filter(Boolean))];
+}
 
 /** Resolves a path from .env against the repo root; bare command names stay as-is (PATH lookup). */
 function resolveBin(value: string): string {
@@ -61,10 +69,17 @@ function loadConfig() {
     }),
     faceModel: path.resolve(REPO_ROOT, env.FACE_MODEL),
     demucs: Object.freeze({ model: env.DEMUCS_MODEL, device: env.DEMUCS_DEVICE }),
+    groq: Object.freeze({
+      apiKeys: Object.freeze(parseApiKeys(env.GROQ_API_KEYS)),
+      model: env.GROQ_MODEL,
+      baseUrl: "https://api.groq.com/openai/v1",
+    }),
     workersDir: path.join(REPO_ROOT, "workers"),
     /** Environment for Python workers: UTF-8 I/O and unbuffered stdout for live progress. */
     pythonEnv: Object.freeze({
       ...process.env,
+      // Workers never call Groq; keep the keys out of child processes.
+      GROQ_API_KEYS: undefined,
       PYTHONUTF8: "1",
       PYTHONIOENCODING: "utf-8",
       PYTHONUNBUFFERED: "1",

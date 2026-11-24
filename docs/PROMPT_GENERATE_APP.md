@@ -71,6 +71,7 @@ Pengguna: kreator / editor konten podcast, umumnya berbahasa Indonesia.
 | Shared        | `packages/shared`: zod schema, tipe, konstanta default                        |
 | Worker        | **Python 3.10/3.11**: demucs, DeepFilterNet, OpenCV, Norfair, numpy           |
 | CLI eksternal | yt-dlp, whisper.cpp (`whisper-cli`), ffmpeg/ffprobe                           |
+| Layanan online | Groq API (opsional, free tier) untuk transkrip cepat; fallback whisper.cpp    |
 | Render        | **ffmpeg + subtitle ASS** (libass) — editly diganti, lihat CLAUDE.md bagian 2 |
 | Persistensi   | File JSON per job di `workspace/<jobId>/job.json`, **tanpa database**         |
 | Test          | Vitest, Testing Library, pytest                                               |
@@ -124,6 +125,8 @@ WHISPER_BIN=./tools/whisper.cpp/build/bin/Release/whisper-cli.exe
 WHISPER_MODEL=./tools/whisper.cpp/models/ggml-medium.bin
 WHISPER_LANGUAGE=id                           # atau "auto"
 WHISPER_THREADS=4
+GROQ_API_KEYS=                                # opsional, beberapa key dipisah koma
+GROQ_MODEL=whisper-large-v3-turbo
 FACE_MODEL=./tools/models/face_detection_yunet_2023mar.onnx
 DEMUCS_MODEL=htdemucs
 DEMUCS_DEVICE=cpu                             # atau "cuda"
@@ -176,6 +179,7 @@ JobSettings {
   maxCandidates: number                  // default 10
   separateVocals: boolean                // default true; matikan untuk podcast tanpa musik (Demucs dilewati)
   denoise: boolean                       // default true
+  onlineTranscribe: boolean              // default true; pakai Groq bila GROQ_API_KEYS terisi
   musicVolume: number                    // 0..1, default 0 (musik latar dibuang)
   subtitleStyle: "bold-center" | "lower-third"  // default "bold-center"
 }
@@ -267,12 +271,19 @@ Setiap stage berada di `apps/server/src/pipeline/stages/<stage>.ts`, idempoten, 
 - `python -m clipper_workers.denoise --input audio/vocals.wav --output audio/`
 - Hasil dinamai ulang menjadi `audio/vocals_clean.wav`. Jangan bergantung pada nama file bawaan DeepFilterNet. Cari outputnya di folder sementara.
 
-### 7.5 `transcribe` — whisper.cpp
+### 7.5 `transcribe` — Groq (online, opsional) atau whisper.cpp
 
 - Konversi dulu: `ffmpeg -i audio/vocals_clean.wav -ar 16000 -ac 1 -c:a pcm_s16le audio/audio16k.wav`.
-- `whisper-cli -m <model> -f audio16k.wav -l <lang> -t <threads> -ojf -of transcript/raw --print-progress` (`-ojf` = JSON lengkap dengan token dan timestamp).
-- **Normalisasi** `raw.json` menjadi schema `Transcript`: gabungkan token sub-kata menjadi kata, buang token khusus (`[_BEG_]`, `[_TT_…]`), dan ubah waktu ke detik. Tulis hasilnya ke `transcript/transcript.json`.
-- Fungsi normalisasi adalah fungsi murni dan **wajib diuji** dengan fixture `raw.json` kecil.
+- **Groq** dipakai bila `settings.onlineTranscribe = true` dan `GROQ_API_KEYS` terisi:
+  - `ffmpeg silencedetect` mencari titik hening, lalu audio dipotong per ±10 menit (dicari ±60 detik di sekitar target) menjadi FLAC 16 kHz mono di `transcript/groq/chunk-NNN.flac`. Rencana potongan disimpan di `transcript/groq/plan.json`.
+  - Tiap potongan dikirim ke `POST https://api.groq.com/openai/v1/audio/transcriptions` (`response_format=verbose_json`, `timestamp_granularities[]=word,segment`, `temperature=0`). Respons disimpan di `chunk-NNN.json` (cache, tidak dikirim ulang).
+  - Rotasi key: HTTP 429 → key diistirahatkan sesuai `retry-after` lalu pakai key berikutnya; 401/403 → key dilewati; 5xx/jaringan → coba lagi. Bila semua key habis lebih dari 90 detik, atau error lain, pindah ke whisper.cpp.
+  - Normalisasi (`pipeline/transcript/groq.ts`): geser waktu sesuai offset potongan, kelompokkan kata per segmen, kembalikan tanda baca dari teks segmen, buang segmen `no_speech_prob > 0.8`, anotasi `[..]`, dan segmen berulang. `probability` = `exp(avg_logprob)` segmen.
+  - Pesan akhir tahap menunjukkan mesin yang dipakai ("Ditranskrip online (Groq)" atau alasan pindah ke whisper lokal).
+- **whisper.cpp** (default lokal / fallback):
+  - `whisper-cli -m <model> -f audio16k.wav -l <lang> -t <threads> -ojf -of transcript/raw --print-progress` (`-ojf` = JSON lengkap dengan token dan timestamp).
+  - **Normalisasi** `raw.json` menjadi schema `Transcript`: gabungkan token sub-kata menjadi kata, buang token khusus (`[_BEG_]`, `[_TT_…]`), dan ubah waktu ke detik. Tulis hasilnya ke `transcript/transcript.json`.
+- Fungsi normalisasi (whisper.cpp dan Groq) adalah fungsi murni dan **wajib diuji** dengan fixture kecil.
 
 ### 7.6 `find-moments` — scoring lokal & deterministik
 
@@ -335,7 +346,7 @@ Saat membangun halaman, jalankan skill **hallmark** (`/hallmark`). Setelahnya, r
 
 1. **Beranda / Job baru** (`/`)
    - Input URL besar + tombol "Proses", atau area drop/pilih file video.
-   - Pengaturan lanjutan dalam panel yang bisa dilipat: bahasa, durasi klip, jumlah kandidat, denoise, volume musik.
+   - Pengaturan lanjutan dalam panel yang bisa dilipat: bahasa, durasi klip, jumlah kandidat, denoise, transkrip online (Groq), volume musik.
    - Di bawahnya, daftar job terakhir: judul, durasi, status, waktu dibuat.
    - Banner peringatan jika `/health` melaporkan ada tool yang hilang.
 
