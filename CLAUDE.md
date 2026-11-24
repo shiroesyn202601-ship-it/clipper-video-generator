@@ -22,7 +22,7 @@ URL / file video
 [3] Bersihkan noise ......... DeepFilterNet
 [4] Transkrip + cari momen .. whisper.cpp
 [5] Kunci wajah + crop 9:16 . OpenCV + Norfair
-[6] Susun subtitle + render . editly (ffmpeg)
+[6] Susun subtitle + render . ffmpeg + subtitle ASS (libass)
    │
    ▼
 Klip 9:16 + subtitle
@@ -34,18 +34,22 @@ Aplikasi berjalan **sepenuhnya di komputer lokal**. Tidak ada server cloud, tida
 
 ## 2. Tools & Library (Stack Resmi)
 
-| #   | Kebutuhan                    | Tool                                          | Repo                                                                   |
-| --- | ---------------------------- | --------------------------------------------- | ---------------------------------------------------------------------- |
-| 1   | Bahasa / framework aplikasi  | **React** (UI)                                | https://react.dev                                                      |
-| 2   | Ambil video sumber           | **yt-dlp**                                    | https://github.com/yt-dlp/yt-dlp                                       |
-| 3   | Transkrip & cari momen       | **whisper.cpp**                               | https://github.com/ggml-org/whisper.cpp                                |
-| 4   | Bersihkan suara dari noise   | **DeepFilterNet**                             | https://github.com/rikorose/deepfilternet                              |
-| 5   | Pisahkan suara dari musik    | **Demucs**                                    | https://github.com/facebookresearch/demucs                             |
-| 6   | Kunci wajah & auto-crop 9:16 | **OpenCV** + **Norfair**                      | https://github.com/opencv/opencv · https://github.com/tryolabs/norfair |
-| 7   | Susun subtitle + render      | **editly**                                    | https://github.com/mifi/editly                                         |
-| 8   | UI anti "AI slop"            | **hallmark** (agent skill)                    | https://github.com/nutlope/hallmark                                    |
-| 9   | Beresin detail kecil UI      | **make-interfaces-feel-better** (agent skill) | https://github.com/jakubkrehel/make-interfaces-feel-better             |
-| 10  | Finishing UI                 | **benjitaylor/skills** (skill _stageshow_)    | https://github.com/benjitaylor/skills                                  |
+| #   | Kebutuhan                    | Tool                                                                             | Repo                                                                   |
+| --- | ---------------------------- | -------------------------------------------------------------------------------- | ---------------------------------------------------------------------- |
+| 1   | Bahasa / framework aplikasi  | **React** (UI)                                                                   | https://react.dev                                                      |
+| 2   | Ambil video sumber           | **yt-dlp**                                                                       | https://github.com/yt-dlp/yt-dlp                                       |
+| 3   | Transkrip & cari momen       | **whisper.cpp**                                                                  | https://github.com/ggml-org/whisper.cpp                                |
+| 4   | Bersihkan suara dari noise   | **DeepFilterNet**                                                                | https://github.com/rikorose/deepfilternet                              |
+| 5   | Pisahkan suara dari musik    | **Demucs**                                                                       | https://github.com/facebookresearch/demucs                             |
+| 6   | Kunci wajah & auto-crop 9:16 | **OpenCV** + **Norfair**                                                         | https://github.com/opencv/opencv · https://github.com/tryolabs/norfair |
+| 7   | Susun subtitle + render      | **ffmpeg + subtitle ASS (libass)** — menggantikan editly, lihat catatan di bawah | https://ffmpeg.org · https://github.com/libass/libass                  |
+| 8   | UI anti "AI slop"            | **hallmark** (agent skill)                                                       | https://github.com/nutlope/hallmark                                    |
+| 9   | Beresin detail kecil UI      | **make-interfaces-feel-better** (agent skill)                                    | https://github.com/jakubkrehel/make-interfaces-feel-better             |
+| 10  | Finishing UI                 | **benjitaylor/skills** (skill _stageshow_)                                       | https://github.com/benjitaylor/skills                                  |
+
+> **Catatan tool #7 (24 Nov 2026):** editly (https://github.com/mifi/editly) awalnya dipilih, tetapi dependency native-nya
+> (`gl@5`, `canvas@2`) hanya punya binary untuk Node 12–16 dan gagal di-compile pada Node modern di Windows.
+> Atas persetujuan user, render memakai ffmpeg langsung dengan subtitle ASS (libass, sudah termasuk di build ffmpeg).
 
 Pendukung wajib: **Node.js LTS**, **Python 3.10+**, **ffmpeg + ffprobe** di PATH, **Git**.
 
@@ -63,7 +67,7 @@ Pendukung wajib: **Node.js LTS**, **Python 3.10+**, **ffmpeg + ffprobe** di PATH
 ### Arsitektur yang disepakati
 
 - `apps/web` — frontend **React** (Vite + TypeScript). Hanya UI; tidak menjalankan proses berat.
-- `apps/server` — backend **Node.js** lokal. Mengorkestrasi pipeline: memanggil CLI (yt-dlp, whisper.cpp, ffmpeg), menjalankan editly sebagai library, dan memanggil worker Python.
+- `apps/server` — backend **Node.js** lokal. Mengorkestrasi pipeline: memanggil CLI (yt-dlp, whisper.cpp, ffmpeg), menyusun subtitle ASS untuk render, dan memanggil worker Python.
 - `workers/` — script **Python** untuk demucs, DeepFilterNet, OpenCV + Norfair. Dipanggil oleh server lewat proses anak (child process) dengan input/output berupa path file + JSON.
 - `tools/` — binary lokal (mis. build whisper.cpp) dan model (mis. `ggml-*.bin`). **Tidak di-commit.**
 - `workspace/` — file kerja per job (video sumber, audio, transkrip, hasil render). **Tidak di-commit.**

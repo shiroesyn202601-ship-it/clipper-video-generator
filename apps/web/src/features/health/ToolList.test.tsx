@@ -5,11 +5,11 @@ import { ToolList } from "./ToolList.tsx";
 const tools: ToolStatus[] = [
   { id: "ffmpeg", label: "ffmpeg", isAvailable: true, version: "7.1", detail: null },
   {
-    id: "editly",
-    label: "editly",
+    id: "subtitles",
+    label: "Subtitle (ffmpeg libass)",
     isAvailable: false,
     version: null,
-    detail: "Paket npm editly belum terpasang",
+    detail: "ffmpeg tanpa libass",
   },
 ];
 
@@ -17,7 +17,7 @@ describe("ToolList", () => {
   it("shows the version for available tools and the reason for missing ones", () => {
     render(<ToolList tools={tools} />);
     expect(screen.getByText("7.1")).toBeInTheDocument();
-    expect(screen.getByText("Paket npm editly belum terpasang")).toBeInTheDocument();
+    expect(screen.getByText("ffmpeg tanpa libass")).toBeInTheDocument();
   });
 
   it("announces availability to screen readers, not only by color", () => {

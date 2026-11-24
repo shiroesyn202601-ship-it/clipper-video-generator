@@ -2,6 +2,7 @@ import { createClipBodySchema, updateClipBodySchema, type Clip } from "@clipper/
 import type { FastifyInstance } from "fastify";
 import { z } from "zod";
 import type { ClipService } from "../jobs/clip-service.ts";
+import { revealInFileManager } from "../tools/reveal.ts";
 import { parseInput } from "./validate.ts";
 
 const jobParamsSchema = z.object({ id: z.string().uuid() });
@@ -30,6 +31,13 @@ export function registerClipRoutes(app: FastifyInstance, deps: { clips: ClipServ
   app.post("/jobs/:id/clips/:clipId/cancel", async (request, reply) => {
     const { id, clipId } = parseInput(clipParamsSchema, request.params);
     await clips.cancel(id, clipId);
+    return reply.status(204).send();
+  });
+
+  /** Local-only convenience: open the clip folder (final.mp4) in the OS file manager. */
+  app.post("/jobs/:id/clips/:clipId/reveal", (request, reply) => {
+    const { id, clipId } = parseInput(clipParamsSchema, request.params);
+    revealInFileManager(clips.clipDir(id, clipId));
     return reply.status(204).send();
   });
 

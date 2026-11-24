@@ -37,6 +37,14 @@ describe("buildCaptions", () => {
     expect(captions[0]!.startSec).toBe(0);
   });
 
+  it("never lets a caption run across a sentence end, even after a single word", () => {
+    // Regression: "sesuatu. Dan kapan itu" used to be one caption.
+    const captions = buildCaptions(words("gagal melakukan sesuatu sesuatu. Dan kapan itu", 0), 0);
+    const texts = captions.map((caption) => caption.text.replace("\n", " "));
+    expect(texts.every((text) => !/\.\s\S/.test(text))).toBe(true);
+    expect(texts).toContain("Dan kapan itu");
+  });
+
   it("closes tiny gaps between captions to avoid flicker", () => {
     const captions = buildCaptions(words("Satu dua. Tiga empat.", 0), 0);
     expect(captions[0]!.endSec).toBe(captions[1]!.startSec);

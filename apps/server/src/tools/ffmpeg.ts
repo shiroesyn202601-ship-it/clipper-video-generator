@@ -75,6 +75,8 @@ export type RunFfmpegOptions = {
   config: Config;
   /** Arguments after the global flags; the last one must be the output path. */
   args: string[];
+  /** Working directory, so filter arguments can use relative paths. */
+  cwd?: string;
   /** Final output file; ffmpeg writes to a temp name first, then it is renamed. */
   outputPath: string;
   /** Expected output duration, used to compute progress. */
@@ -110,6 +112,7 @@ export async function runFfmpeg(options: RunFfmpegOptions): Promise<void> {
     await runProcess({
       command: config.bins.ffmpeg,
       args,
+      ...(options.cwd ? { cwd: options.cwd } : {}),
       ...(options.signal ? { signal: options.signal } : {}),
       ...(options.logFile ? { logFile: options.logFile } : {}),
       onStdoutLine: (line) => {

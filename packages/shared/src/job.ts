@@ -129,8 +129,40 @@ export const clipSchema = z.object({
   /** Path of final.mp4 relative to the job folder, once rendered. */
   output: z.string().nullable(),
   error: z.object({ code: z.string(), userMessage: z.string() }).nullable(),
+  /** Set when the user asks for a render; cleared when the clip is edited. */
+  renderRequestedAt: z.string().nullable().default(null),
 });
 export type Clip = z.infer<typeof clipSchema>;
+
+export const CLIP_STATUSES = [
+  "draft",
+  "queued",
+  "rendering",
+  "done",
+  "failed",
+  "cancelled",
+] as const;
+export type ClipStatus = (typeof CLIP_STATUSES)[number];
+
+/** Single status for a clip, derived from its stages (never stored, so it cannot drift). */
+export function clipStatus(clip: Clip): ClipStatus {
+  const states = CLIP_STAGE_IDS.map((id) => clip.stages[id].status);
+  if (states.includes("running")) return "rendering";
+  if (clip.error) return "failed";
+  if (clip.output) return "done";
+  if (states.includes("cancelled")) return "cancelled";
+  if (clip.renderRequestedAt) return "queued";
+  return "draft";
+}
+
+/** Overall render progress 0..1 across the clip stages. */
+export function clipProgress(clip: Clip): number {
+  const total = CLIP_STAGE_IDS.reduce((sum, id) => {
+    const state = clip.stages[id];
+    return sum + (state.status === "done" ? 1 : state.progress);
+  }, 0);
+  return total / CLIP_STAGE_IDS.length;
+}
 
 export const jobErrorSchema = z.object({ code: z.string(), userMessage: z.string() });
 export type JobError = z.infer<typeof jobErrorSchema>;

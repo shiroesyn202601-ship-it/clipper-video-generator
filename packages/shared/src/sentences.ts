@@ -1,4 +1,5 @@
-import { MOMENT_TUNING, type Transcript, type TranscriptWord } from "@clipper/shared";
+import { MOMENT_TUNING } from "./defaults.ts";
+import type { Transcript, TranscriptWord } from "./transcript.ts";
 
 export type Sentence = {
   startSec: number;

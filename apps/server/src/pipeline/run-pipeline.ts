@@ -110,6 +110,8 @@ export function createPipelineRunner(deps: PipelineDeps) {
 
       try {
         logger.info({ jobId, stage: stage.id }, "stage started");
+        // An abort that happened before the stage subscribed to the signal must still stop it.
+        signal.throwIfAborted();
         await stage.run(context);
         await store.update(jobId, (draft) => markFinished(draft.stages[stage.id], "done", null));
         logger.info({ jobId, stage: stage.id }, "stage done");
@@ -184,6 +186,8 @@ export function createPipelineRunner(deps: PipelineDeps) {
       };
 
       try {
+        // An abort that happened before the stage subscribed to the signal must still stop it.
+        signal.throwIfAborted();
         await stage.run(context);
         await updateClip((draft) => markFinished(draft.stages[stage.id], "done", null));
       } catch (error) {

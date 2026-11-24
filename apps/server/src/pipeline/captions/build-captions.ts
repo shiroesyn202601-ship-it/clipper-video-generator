@@ -7,7 +7,10 @@ import {
 
 /** Gaps shorter than this between captions are closed so subtitles do not flicker (seconds). */
 const FLICKER_GAP_SEC = 0.3;
-const ENDS_PHRASE = /[.,?!;:…]["')\]]*$/;
+/** A sentence end always closes a caption, even a one-word one ("sesuatu."). */
+const ENDS_SENTENCE = /[.?!…]["')\]]*$/;
+/** A clause end closes a caption only when it already holds two or more words. */
+const ENDS_CLAUSE = /[,;:]["')\]]*$/;
 
 function round3(value: number): number {
   return Math.round(value * 1000) / 1000;
@@ -75,7 +78,7 @@ export function buildCaptions(words: readonly TranscriptWord[], clipStartSec: nu
       current = [];
     }
     current.push(word);
-    if (current.length >= 2 && ENDS_PHRASE.test(word.text)) {
+    if (ENDS_SENTENCE.test(word.text) || (current.length >= 2 && ENDS_CLAUSE.test(word.text))) {
       groups.push(current);
       current = [];
     }

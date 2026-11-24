@@ -59,19 +59,19 @@ Pengguna: kreator / editor konten podcast, umumnya berbahasa Indonesia.
 
 ## 2. Stack Teknis
 
-| Lapisan       | Teknologi                                                                   |
-| ------------- | --------------------------------------------------------------------------- |
-| Monorepo      | **npm workspaces** (`apps/*`, `packages/*`) + folder `workers/` (Python)    |
-| Frontend      | **React 18 + TypeScript + Vite**, React Router, TanStack Query, CSS Modules |
-| Backend lokal | **Node.js LTS + TypeScript + Fastify**, zod, pino (logger bawaan Fastify)   |
-| Shared        | `packages/shared`: zod schema, tipe, konstanta default                      |
-| Worker        | **Python 3.10/3.11**: demucs, DeepFilterNet, OpenCV, Norfair, numpy         |
-| CLI eksternal | yt-dlp, whisper.cpp (`whisper-cli`), ffmpeg/ffprobe                         |
-| Render        | **editly** (dipakai sebagai library Node di server)                         |
-| Persistensi   | File JSON per job di `workspace/<jobId>/job.json`, **tanpa database**       |
-| Test          | Vitest, Testing Library, pytest                                             |
-| Kualitas      | ESLint (flat config), Prettier, ruff, `tsc --noEmit`                        |
-| UI skill      | hallmark, make-interfaces-feel-better, stageshow (lihat CLAUDE.md)          |
+| Lapisan       | Teknologi                                                                     |
+| ------------- | ----------------------------------------------------------------------------- |
+| Monorepo      | **npm workspaces** (`apps/*`, `packages/*`) + folder `workers/` (Python)      |
+| Frontend      | **React 18 + TypeScript + Vite**, React Router, TanStack Query, CSS Modules   |
+| Backend lokal | **Node.js LTS + TypeScript + Fastify**, zod, pino (logger bawaan Fastify)     |
+| Shared        | `packages/shared`: zod schema, tipe, konstanta default                        |
+| Worker        | **Python 3.10/3.11**: demucs, DeepFilterNet, OpenCV, Norfair, numpy           |
+| CLI eksternal | yt-dlp, whisper.cpp (`whisper-cli`), ffmpeg/ffprobe                           |
+| Render        | **ffmpeg + subtitle ASS** (libass) — editly diganti, lihat CLAUDE.md bagian 2 |
+| Persistensi   | File JSON per job di `workspace/<jobId>/job.json`, **tanpa database**         |
+| Test          | Vitest, Testing Library, pytest                                               |
+| Kualitas      | ESLint (flat config), Prettier, ruff, `tsc --noEmit`                          |
+| UI skill      | hallmark, make-interfaces-feel-better, stageshow (lihat CLAUDE.md)            |
 
 ---
 
@@ -203,23 +203,27 @@ Caption { startSec: number; endSec: number; text: string }   // waktu relatif te
 
 Base: `http://127.0.0.1:5174/api`. Request dan response dalam JSON. Semua body divalidasi zod.
 
-| Method | Path                             | Fungsi                                                                        |
-| ------ | -------------------------------- | ----------------------------------------------------------------------------- |
-| GET    | `/health`                        | status tiap tool eksternal (ada/tidak, versi)                                 |
-| GET    | `/jobs`                          | daftar job (ringkas), terbaru di atas                                         |
-| POST   | `/jobs`                          | buat job dari URL: `{ url, settings? }`                                       |
-| POST   | `/jobs/upload`                   | buat job dari file (multipart, stream ke disk, batas ukuran dari config)      |
-| GET    | `/jobs/:id`                      | detail job lengkap                                                            |
-| POST   | `/jobs/:id/cancel`               | batalkan proses yang sedang berjalan                                          |
-| POST   | `/jobs/:id/retry`                | lanjutkan dari stage yang gagal                                               |
-| DELETE | `/jobs/:id`                      | hapus job + foldernya (UI wajib meminta konfirmasi)                           |
-| GET    | `/jobs/:id/transcript`           | transcript ternormalisasi                                                     |
-| GET    | `/jobs/:id/candidates`           | daftar kandidat klip                                                          |
-| POST   | `/jobs/:id/clips`                | buat klip dari kandidat: `{ candidateId, startSec?, endSec? }`                |
-| PATCH  | `/jobs/:id/clips/:clipId`        | ubah rentang / caption                                                        |
-| POST   | `/jobs/:id/clips/:clipId/render` | jalankan track-faces → reframe → render                                       |
-| GET    | `/jobs/:id/media/*`              | stream file dari folder job (mendukung HTTP Range, hanya di dalam folder job) |
-| GET    | `/jobs/:id/events`               | **SSE**: `job-update` (snapshot job lengkap, termasuk klip) dan `job-deleted` |
+| Method | Path                             | Fungsi                                                                                                |
+| ------ | -------------------------------- | ----------------------------------------------------------------------------------------------------- |
+| GET    | `/health`                        | status tiap tool eksternal (ada/tidak, versi)                                                         |
+| GET    | `/jobs`                          | daftar job (ringkas), terbaru di atas                                                                 |
+| POST   | `/jobs`                          | buat job dari URL: `{ url, settings? }`                                                               |
+| POST   | `/jobs/upload`                   | buat job dari file (multipart, stream ke disk, batas ukuran dari config)                              |
+| GET    | `/jobs/:id`                      | detail job lengkap                                                                                    |
+| POST   | `/jobs/:id/cancel`               | batalkan proses yang sedang berjalan                                                                  |
+| POST   | `/jobs/:id/retry`                | lanjutkan dari stage yang gagal                                                                       |
+| DELETE | `/jobs/:id`                      | hapus job + foldernya (UI wajib meminta konfirmasi)                                                   |
+| GET    | `/jobs/:id/transcript`           | transcript ternormalisasi                                                                             |
+| GET    | `/jobs/:id/transcript.vtt`       | transcript sebagai WebVTT (track caption di pratinjau)                                                |
+| GET    | `/jobs/:id/candidates`           | daftar kandidat klip                                                                                  |
+| POST   | `/jobs/:id/clips`                | buat klip dari kandidat: `{ candidateId, startSec?, endSec? }`                                        |
+| PATCH  | `/jobs/:id/clips/:clipId`        | ubah rentang (caption dibangun ulang, semua stage di-reset) atau caption saja (stage render di-reset) |
+| POST   | `/jobs/:id/clips/:clipId/render` | jalankan track-faces → reframe → render                                                               |
+| POST   | `/jobs/:id/clips/:clipId/cancel` | batalkan render klip                                                                                  |
+| POST   | `/jobs/:id/clips/:clipId/reveal` | buka folder klip di file manager OS (khusus aplikasi lokal)                                           |
+| DELETE | `/jobs/:id/clips/:clipId`        | hapus klip + foldernya                                                                                |
+| GET    | `/jobs/:id/media/*`              | stream file dari folder job (mendukung HTTP Range, hanya di dalam folder job)                         |
+| GET    | `/jobs/:id/events`               | **SSE**: `job-update` (snapshot job lengkap, termasuk klip) dan `job-deleted`                         |
 
 Format error seragam: `{ error: { code: string, message: string } }` dengan HTTP status yang tepat (400 validasi, 404 tidak ada, 409 konflik state, 500 tak terduga). `message` berisi teks bahasa Indonesia untuk user.
 
@@ -297,10 +301,10 @@ Tanpa AI cloud. Algoritma di `apps/server/src/pipeline/moments/` dipecah menjadi
 - Baca frame dengan OpenCV, crop 9:16 setinggi penuh mengikuti `centerX` yang diinterpolasi per frame, resize ke **1080×1920**, lalu kirim frame mentah ke `ffmpeg` lewat stdin (`-f rawvideo -pix_fmt bgr24`) → `libx264 -crf 18 -preset medium -pix_fmt yuv420p`, **tanpa audio**. Jangan memakai `cv2.VideoWriter` karena kualitasnya buruk.
 - Potong audio klip dari `vocals_clean.wav`. Jika `musicVolume > 0`, campur dengan `no_vocals.wav` × volume. Normalisasi loudness memakai `loudnorm` ke −14 LUFS. Hasilnya ditulis ke `clips/<id>/audio.wav`.
 
-### 7.9 `render` — editly (per klip)
+### 7.9 `render` — ffmpeg + subtitle ASS (per klip)
 
-- Server menyusun spec editly sebagai objek TS bertipe, simpan salinannya ke `editly.json5` untuk debug, lalu panggil `editly(spec)` dari library.
-- Spec: `width 1080`, `height 1920`, `fps 30`, satu clip berisi layer `video` (reframed.mp4), plus layer teks subtitle per `Caption` dengan `start`/`stop` sesuai waktunya. `audioFilePath` diisi `audio.wav`. `keepSourceAudio: false`.
+- Server menyusun file `captions.ass` (fungsi murni, diuji) dari `clip.captions`: resolusi 1080×1920, gaya sesuai `subtitleStyle`, teks di-escape agar tidak bisa menyisipkan tag ASS.
+- `ffmpeg -i reframed.mp4 -i audio.wav -vf ass=captions.ass -c:v libx264 -crf 20 -c:a aac -b:a 192k -movflags +faststart -shortest final.mp4`, dijalankan dengan `cwd` di folder klip agar path filter tidak perlu di-escape (penting di Windows).
 - **Pemecahan caption** (fungsi murni, diuji): dari kata-kata transcript dalam rentang klip, buat potongan berisi maksimal 3–5 kata / ±1,5 detik / maksimal 2 baris dengan ±18 karakter per baris. Jangan memotong di tengah frasa jika ada tanda baca.
 - Gaya subtitle mengikuti `subtitleStyle`: huruf tebal, putih dengan outline atau latar gelap, dan berada di zona aman (tidak tertutup UI TikTok/Reels: hindari 15% bawah dan 10% atas).
 - Output: `clips/<id>/final.mp4`. Verifikasi dengan `ffprobe` (durasi sesuai, ada stream video dan audio).
@@ -390,7 +394,7 @@ Setiap fase diakhiri dengan: `check` lolos → kriteria terpenuhi → `SETUP.md`
 - Unduh model YuNet → **update SETUP.md**.
 - **Selesai jika:** `reframed.mp4` 1080×1920 mengikuti pembicara dengan gerakan halus pada video dua orang.
 
-### Fase 8 — Subtitle & render editly
+### Fase 8 — Subtitle & render (ffmpeg + ASS)
 
 - Pemecah caption (fungsi murni + test), editor caption di UI, stage `render`.
 - **Selesai jika:** `final.mp4` 9:16 dengan subtitle tersinkron, audio bersih, dan loudness konsisten.

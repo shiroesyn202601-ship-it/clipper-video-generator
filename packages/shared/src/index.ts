@@ -4,4 +4,5 @@ export * from "./health.ts";
 export * from "./job.ts";
 export * from "./moment-lexicon.ts";
 export * from "./moments.ts";
+export * from "./sentences.ts";
 export * from "./transcript.ts";

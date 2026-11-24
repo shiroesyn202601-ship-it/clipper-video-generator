@@ -7,7 +7,7 @@ import {
   type Transcript,
 } from "@clipper/shared";
 import { buildEnergyIndex, computeFeatures, FEATURE_NAMES, type Features } from "./features.ts";
-import { splitSentences, type Sentence } from "./sentences.ts";
+import { splitSentences, type Sentence } from "@clipper/shared";
 
 const REASONS: Record<keyof Features, (features: Features) => string> = {
   hook: (features) =>

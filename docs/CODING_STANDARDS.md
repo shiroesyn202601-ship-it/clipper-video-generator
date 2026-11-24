@@ -243,7 +243,7 @@ workers/
     audio/         # audio.wav (16k mono), vocals.wav, no_vocals.wav, vocals_clean.wav
     transcript/    # transcript.json (ternormalisasi)
     moments/       # candidates.json
-    clips/<clipId>/ faces.json, reframed.mp4, audio.wav, editly.json5, final.mp4
+    clips/<clipId>/ faces.json, reframed.mp4, audio.wav, captions.ass, final.mp4
   ```
 - Format data antar stage (transcript, candidates, faces) didefinisikan sebagai zod schema di `packages/shared`. Output tool mentah WAJIB **dinormalisasi** ke schema ini sebelum disimpan.
 - Semua parameter tuning (durasi klip, jumlah kandidat, model whisper, bahasa) ada di `packages/shared/src/defaults.ts` dan bisa di-override per job.

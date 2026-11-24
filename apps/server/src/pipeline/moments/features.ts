@@ -5,7 +5,7 @@ import {
   type EnergyFile,
   type JobSettings,
 } from "@clipper/shared";
-import type { Sentence } from "./sentences.ts";
+import type { Sentence } from "@clipper/shared";
 
 export const FEATURE_NAMES = [
   "hook",

@@ -39,7 +39,7 @@ describe("JobQueue", () => {
     queue.enqueue({ kind: "analyze", jobId: "a" });
     queue.enqueue({ kind: "render", jobId: "a", clipId: "c1" });
     await new Promise((resolve) => setTimeout(resolve, 10));
-    expect(queue.cancelJob("a")).toBe(true);
+    expect(queue.cancelJob("a")).toEqual({ removedQueued: true, abortedRunning: true });
     await queue.idle();
     expect(wasAborted).toBe(true);
     expect(seen).toHaveLength(1);

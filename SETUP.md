@@ -9,15 +9,15 @@ Setelah semua langkah selesai, buka aplikasi dan pastikan halaman **Status tools
 
 ## 1. Prasyarat
 
-| Tool                         | Versi                                                                              | Cek                                    |
-| ---------------------------- | ---------------------------------------------------------------------------------- | -------------------------------------- |
-| Git                          | terbaru                                                                            | `git --version`                        |
-| Node.js                      | **≥ 22.18** (disarankan 24 LTS), karena server memakai type stripping bawaan Node  | `node -v`                              |
-| Python                       | **3.11** (versi yang diuji dengan torch 2.1.2)                                     | `python --version`                     |
-| ffmpeg + ffprobe             | terbaru, ada di PATH                                                               | `ffmpeg -version` · `ffprobe -version` |
-| Deno                         | terbaru, ada di PATH. Dipakai yt-dlp untuk memecahkan tantangan JavaScript YouTube | `deno --version`                       |
-| (macOS/Linux) CMake + C/C++  | untuk build whisper.cpp                                                            | `cmake --version`                      |
-| (Opsional) GPU NVIDIA + CUDA | mempercepat demucs & whisper                                                       | `nvidia-smi`                           |
+| Tool                         | Versi                                                                                         | Cek                                    |
+| ---------------------------- | --------------------------------------------------------------------------------------------- | -------------------------------------- |
+| Git                          | terbaru                                                                                       | `git --version`                        |
+| Node.js                      | **≥ 22.18** (disarankan 24 LTS), karena server memakai type stripping bawaan Node             | `node -v`                              |
+| Python                       | **3.11** (versi yang diuji dengan torch 2.1.2)                                                | `python --version`                     |
+| ffmpeg + ffprobe             | terbaru, ada di PATH, build dengan **libass** (Gyan "full", Homebrew, dan apt sudah termasuk) | `ffmpeg -version` · `ffprobe -version` |
+| Deno                         | terbaru, ada di PATH. Dipakai yt-dlp untuk memecahkan tantangan JavaScript YouTube            | `deno --version`                       |
+| (macOS/Linux) CMake + C/C++  | untuk build whisper.cpp                                                                       | `cmake --version`                      |
+| (Opsional) GPU NVIDIA + CUDA | mempercepat demucs & whisper                                                                  | `nvidia-smi`                           |
 
 ### Windows
 

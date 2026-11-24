@@ -10,6 +10,8 @@ import { ProgressBar } from "../components/ui/ProgressBar.tsx";
 import { Tabs, type TabItem } from "../components/ui/Tabs.tsx";
 import { CandidateList } from "../features/candidates/CandidateList.tsx";
 import { useCandidates } from "../features/candidates/use-candidates.ts";
+import { ClipList } from "../features/clips/ClipList.tsx";
+import { MakeClipButton } from "../features/clips/MakeClipButton.tsx";
 import { JobHeader } from "../features/jobs/JobHeader.tsx";
 import { SourcePlayer } from "../features/jobs/SourcePlayer.tsx";
 import { StageList } from "../features/jobs/StageList.tsx";
@@ -21,7 +23,7 @@ import { copy } from "../lib/copy.ts";
 import { toPercent } from "../lib/format.ts";
 import styles from "./JobPage.module.css";
 
-type PanelId = "candidates" | "transcript";
+type PanelId = "candidates" | "clips" | "transcript";
 
 export function JobPage() {
   const { jobId = "" } = useParams();
@@ -93,8 +95,21 @@ function JobView({ job, onDeleted }: { job: Job; onDeleted: () => void }) {
           candidates={candidates.data.candidates}
           previewingId={preview?.id ?? null}
           onPreview={startPreview}
+          renderActions={(candidate) => (
+            <MakeClipButton
+              jobId={job.id}
+              candidate={candidate}
+              existingClip={job.clips.find((clip) => clip.candidateId === candidate.id)}
+            />
+          )}
         />
       ),
+    },
+    {
+      id: "clips",
+      label: copy.clips.title,
+      ...(job.clips.length > 0 ? { badge: String(job.clips.length) } : {}),
+      content: <ClipList jobId={job.id} clips={job.clips} />,
     },
     {
       id: "transcript",

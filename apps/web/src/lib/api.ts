@@ -3,8 +3,12 @@ import {
   jobSchema,
   jobSummarySchema,
   candidatesFileSchema,
+  clipSchema,
   transcriptSchema,
   type CandidatesFile,
+  type Clip,
+  type CreateClipBody,
+  type UpdateClipBody,
   type Transcript,
   type CreateJobBody,
   type HealthReport,
@@ -76,6 +80,10 @@ async function request<T extends z.ZodTypeAny>(
 
 const noContentSchema = z.null();
 
+function clipPath(jobId: string, clipId: string): string {
+  return `/jobs/${encodeURIComponent(jobId)}/clips/${encodeURIComponent(clipId)}`;
+}
+
 export const api = {
   getHealth: (signal?: AbortSignal): Promise<HealthReport> =>
     request("/health", { schema: healthReportSchema, ...(signal ? { signal } : {}) }),
@@ -116,6 +124,31 @@ export const api = {
       schema: candidatesFileSchema,
       ...(signal ? { signal } : {}),
     }),
+
+  createClip: (jobId: string, body: CreateClipBody): Promise<Clip> =>
+    request(`/jobs/${encodeURIComponent(jobId)}/clips`, {
+      method: "POST",
+      body,
+      schema: clipSchema,
+    }),
+
+  updateClip: (jobId: string, clipId: string, body: UpdateClipBody): Promise<Clip> =>
+    request(clipPath(jobId, clipId), { method: "PATCH", body, schema: clipSchema }),
+
+  renderClip: (jobId: string, clipId: string): Promise<Clip> =>
+    request(`${clipPath(jobId, clipId)}/render`, { method: "POST", schema: clipSchema }),
+
+  cancelClip: async (jobId: string, clipId: string): Promise<void> => {
+    await request(`${clipPath(jobId, clipId)}/cancel`, { method: "POST", schema: noContentSchema });
+  },
+
+  revealClip: async (jobId: string, clipId: string): Promise<void> => {
+    await request(`${clipPath(jobId, clipId)}/reveal`, { method: "POST", schema: noContentSchema });
+  },
+
+  deleteClip: async (jobId: string, clipId: string): Promise<void> => {
+    await request(clipPath(jobId, clipId), { method: "DELETE", schema: noContentSchema });
+  },
 
   transcriptVttUrl: (jobId: string): string =>
     `${API_BASE}/jobs/${encodeURIComponent(jobId)}/transcript.vtt`,

@@ -70,6 +70,7 @@ export class ClipService {
       stages: newClipStages(),
       output: null,
       error: null,
+      renderRequestedAt: null,
     };
     await this.#store.update(jobId, (draft) => {
       draft.clips.push(clip);
@@ -108,6 +109,7 @@ export class ClipService {
       if (isRangeChanged || captions) {
         target.output = null;
         target.error = null;
+        target.renderRequestedAt = null;
       }
     });
     return this.#find(updated, clipId);
@@ -123,6 +125,7 @@ export class ClipService {
         }
       }
       clip.error = null;
+      clip.renderRequestedAt = new Date().toISOString();
     });
     this.#queue.enqueue({ kind: "render", jobId, clipId });
     return this.#find(updated, clipId);
@@ -146,6 +149,12 @@ export class ClipService {
     await this.#store.update(jobId, (draft) => {
       draft.clips = draft.clips.filter((item) => item.id !== clipId);
     });
+  }
+
+  /** Folder of an existing clip (validated, so the path is always inside the workspace). */
+  clipDir(jobId: string, clipId: string): string {
+    this.#find(this.#store.get(jobId), clipId);
+    return path.join(this.#store.jobDir(jobId), "clips", clipId);
   }
 
   #find(job: Job, clipId: string): Clip {

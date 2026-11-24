@@ -13,7 +13,7 @@ import {
   scoreFeatures,
   selectNonOverlapping,
 } from "./find-moments.ts";
-import { splitSentences } from "./sentences.ts";
+import { splitSentences } from "@clipper/shared";
 
 const settings = jobSettingsSchema.parse({
   ...DEFAULT_JOB_SETTINGS,

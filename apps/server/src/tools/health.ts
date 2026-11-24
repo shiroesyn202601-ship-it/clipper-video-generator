@@ -1,5 +1,4 @@
-import { readFile, stat } from "node:fs/promises";
-import path from "node:path";
+import { stat } from "node:fs/promises";
 import type { HealthReport, ToolId, ToolStatus } from "@clipper/shared";
 import type { Config } from "../config.ts";
 import { errorMessage } from "../lib/errors.ts";
@@ -40,7 +39,7 @@ export async function checkHealth(config: Config): Promise<HealthReport> {
     checkCommand("python", "Python", config.bins.python, ["--version"], firstLine),
     checkPythonPackages(config.bins.python),
     checkFile("face-model", "Model wajah YuNet", config.faceModel),
-    checkEditly(config.repoRoot),
+    checkSubtitleFilter(config.bins.ffmpeg),
   ]);
   const tools = groups.flat();
   return { isReady: tools.every((tool) => tool.isAvailable), tools };
@@ -103,14 +102,21 @@ async function checkPythonPackages(python: string): Promise<ToolStatus[]> {
   }
 }
 
-async function checkEditly(repoRoot: string): Promise<ToolStatus> {
-  const base = { id: "editly", label: "editly" } as const;
-  const packageJsonPath = path.join(repoRoot, "node_modules", "editly", "package.json");
+/** Render burns subtitles with ffmpeg's "ass" filter, which needs ffmpeg built with libass. */
+async function checkSubtitleFilter(ffmpeg: string): Promise<ToolStatus> {
+  const base = { id: "subtitles", label: "Subtitle (ffmpeg libass)" } as const;
   try {
-    const { version } = JSON.parse(await readFile(packageJsonPath, "utf8")) as { version: string };
-    return { ...base, isAvailable: true, version, detail: null };
-  } catch {
-    return { ...base, isAvailable: false, version: null, detail: "Paket npm editly belum terpasang" };
+    const { stdout } = await runProcess({ command: ffmpeg, args: ["-hide_banner", "-filters"] });
+    // Filter list lines look like: " .. ass   V->V   Render ASS subtitles ..."
+    const hasAss = /^\s*\S+\s+ass\s/m.test(stdout);
+    return {
+      ...base,
+      isAvailable: hasAss,
+      version: null,
+      detail: hasAss ? "filter ass tersedia" : "ffmpeg ini dibuat tanpa libass. Pasang build ffmpeg 'full'.",
+    };
+  } catch (error) {
+    return { ...base, isAvailable: false, version: null, detail: errorMessage(error) };
   }
 }
 

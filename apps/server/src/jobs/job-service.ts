@@ -150,17 +150,18 @@ export class JobService {
   }
 
   async cancel(jobId: string): Promise<Job> {
-    const job = this.#store.get(jobId);
-    const wasActive = this.#queue.cancelJob(jobId);
-    if (!wasActive) {
+    this.#store.get(jobId);
+    const result = this.#queue.cancelJob(jobId);
+    if (!result.removedQueued && !result.abortedRunning) {
       throw conflict(`Job ${jobId} is not running`, "Tidak ada proses yang sedang berjalan.");
     }
-    // A queued (not yet started) job never reaches the pipeline's cancel branch.
-    if (job.status === "queued") {
+    // A task removed before it started never reaches the pipeline's cancel branch.
+    if (!result.abortedRunning) {
       return this.#store.update(jobId, (draft) => {
         draft.status = "cancelled";
       });
     }
+    await this.#queue.idleFor(jobId);
     return this.#store.get(jobId);
   }
 

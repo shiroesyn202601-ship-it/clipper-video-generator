@@ -1,4 +1,5 @@
 import { createBrowserRouter } from "react-router-dom";
+import { ClipEditorPage } from "../pages/ClipEditorPage.tsx";
 import { HomePage } from "../pages/HomePage.tsx";
 import { JobPage } from "../pages/JobPage.tsx";
 import { NotFoundPage } from "../pages/NotFoundPage.tsx";
@@ -12,6 +13,7 @@ export const router = createBrowserRouter([
       { path: "/", element: <HomePage /> },
       { path: "/tools", element: <ToolsPage /> },
       { path: "/jobs/:jobId", element: <JobPage /> },
+      { path: "/jobs/:jobId/clips/:clipId", element: <ClipEditorPage /> },
       { path: "*", element: <NotFoundPage /> },
     ],
   },

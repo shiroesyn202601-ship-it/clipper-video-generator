@@ -33,24 +33,29 @@ export class JobQueue {
     void this.#next();
   }
 
-  /** Removes queued tasks of the job and aborts its running task. Returns true if anything stopped. */
-  cancelJob(jobId: string, clipId?: string): boolean {
+  /**
+   * Removes queued tasks of the job and aborts its running task.
+   * Tells the caller what happened: an aborted task records its own cancellation, a removed
+   * (never started) task must be marked cancelled by the caller.
+   */
+  cancelJob(jobId: string, clipId?: string): { removedQueued: boolean; abortedRunning: boolean } {
     const matches = (task: QueueTask): boolean =>
       task.jobId === jobId &&
       (clipId === undefined || (task.kind === "render" && task.clipId === clipId));
-    let didCancel = false;
+    let removedQueued = false;
+    let abortedRunning = false;
     for (let index = this.#pending.length - 1; index >= 0; index--) {
       const task = this.#pending[index];
       if (task && matches(task)) {
         this.#pending.splice(index, 1);
-        didCancel = true;
+        removedQueued = true;
       }
     }
     if (this.#running && matches(this.#running.task)) {
       this.#running.controller.abort();
-      didCancel = true;
+      abortedRunning = true;
     }
-    return didCancel;
+    return { removedQueued, abortedRunning };
   }
 
   isActive(jobId: string): boolean {

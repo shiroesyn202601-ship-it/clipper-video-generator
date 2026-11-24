@@ -1,4 +1,4 @@
-import type { JobStatus, StageId, StageStatus } from "@clipper/shared";
+import type { ClipStatus, JobStatus, StageId, StageStatus } from "@clipper/shared";
 
 /** All user-facing UI text lives here (Bahasa Indonesia). Components must not inline strings. */
 export const copy = {
@@ -102,6 +102,44 @@ export const copy = {
     reasonsLabel: "Alasan skor",
     preview: "Pratinjau",
     previewing: "Memutar…",
+  },
+  clips: {
+    title: "Klip",
+    empty: "Belum ada klip. Pilih kandidat di tab Kandidat klip, lalu klik Jadikan klip.",
+    name: (number: number) => `Klip ${number}`,
+    make: "Jadikan klip",
+    open: "Buka klip",
+  },
+  clipStatus: {
+    draft: "Belum dirender",
+    queued: "Antre",
+    rendering: "Merender",
+    done: "Siap",
+    failed: "Gagal",
+    cancelled: "Dibatalkan",
+  } satisfies Record<ClipStatus, string>,
+  clipEditor: {
+    back: "Kembali ke job",
+    notFound: "Klip tidak ditemukan. Mungkin sudah dihapus.",
+    range: "Rentang klip",
+    start: "Awal",
+    end: "Akhir",
+    earlierSentence: "geser ke kalimat sebelumnya",
+    laterSentence: "geser ke kalimat berikutnya",
+    captions: "Subtitle",
+    noCaptions: "Tidak ada ucapan di rentang ini.",
+    finalPreview: "Hasil klip 9:16",
+    sourcePreview: "Pratinjau rentang klip dari video sumber",
+    sourceNote: "Pratinjau dari video sumber. Hasil 9:16 dengan subtitle muncul setelah render.",
+    download: "Unduh MP4",
+    reveal: "Buka folder",
+    delete: "Hapus klip",
+    deleteTitle: "Hapus klip ini?",
+    deleteBody: "Klip dan file hasil render-nya akan dihapus dari disk.",
+    render: "Render klip",
+    rerender: "Render ulang",
+    discard: "Batalkan perubahan",
+    renderProgress: "Progres render",
   },
   jobStatus: {
     queued: "Antre",
