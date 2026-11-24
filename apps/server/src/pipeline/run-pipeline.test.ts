@@ -111,6 +111,63 @@ describe("pipeline runner", () => {
     expect(store.get(job.id).stages.download.status).toBe("cancelled");
   });
 
+  it("skips an optional stage that is still pending", async () => {
+    let separateRuns = 0;
+    const { store, queue, service } = await setup(
+      stages({
+        "separate-vocals": async () => {
+          separateRuns++;
+          await Promise.resolve();
+        },
+      }).map((stage) =>
+        stage.id === "separate-vocals"
+          ? { ...stage, shouldSkip: (job) => !job.settings.separateVocals }
+          : stage,
+      ),
+    );
+    const job = await service.create(urlSource, undefined);
+    await service.skipStage(job.id, "separate-vocals");
+    service.start(job.id);
+    await queue.idle();
+    expect(separateRuns).toBe(0);
+    expect(store.get(job.id).stages["separate-vocals"].status).toBe("skipped");
+    expect(store.get(job.id).status).toBe("ready");
+  });
+
+  it("stops a running optional stage and continues after it", async () => {
+    const { store, queue, service } = await setup(
+      stages({
+        "separate-vocals": (context) =>
+          new Promise((_resolve, reject) => {
+            context.signal.addEventListener("abort", () => reject(new Error("aborted")));
+          }),
+      }).map((stage) =>
+        stage.id === "separate-vocals"
+          ? { ...stage, shouldSkip: (job) => !job.settings.separateVocals }
+          : stage,
+      ),
+    );
+    const job = await service.create(urlSource, undefined);
+    service.start(job.id);
+    while (store.get(job.id).stages["separate-vocals"].status !== "running") {
+      await new Promise((resolve) => setTimeout(resolve, 10));
+    }
+    await service.skipStage(job.id, "separate-vocals");
+    await queue.idle();
+    const done = store.get(job.id);
+    expect(done.status).toBe("ready");
+    expect(done.stages["separate-vocals"].status).toBe("skipped");
+    expect(done.settings.separateVocals).toBe(false);
+  });
+
+  it("refuses to skip a required stage", async () => {
+    const { service } = await setup(stages());
+    const job = await service.create(urlSource, undefined);
+    await expect(service.skipStage(job.id, "transcribe")).rejects.toMatchObject({
+      code: "STAGE_NOT_SKIPPABLE",
+    });
+  });
+
   it("rejects invalid settings with a validation error", async () => {
     const { service } = await setup(stages());
     await expect(

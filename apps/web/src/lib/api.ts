@@ -103,6 +103,12 @@ export const api = {
   cancelJob: (jobId: string): Promise<Job> =>
     request(`/jobs/${encodeURIComponent(jobId)}/cancel`, { method: "POST", schema: jobSchema }),
 
+  skipStage: (jobId: string, stageId: string): Promise<Job> =>
+    request(`/jobs/${encodeURIComponent(jobId)}/stages/${encodeURIComponent(stageId)}/skip`, {
+      method: "POST",
+      schema: jobSchema,
+    }),
+
   retryJob: (jobId: string): Promise<Job> =>
     request(`/jobs/${encodeURIComponent(jobId)}/retry`, { method: "POST", schema: jobSchema }),
 

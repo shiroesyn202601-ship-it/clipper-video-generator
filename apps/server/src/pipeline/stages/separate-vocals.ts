@@ -6,6 +6,8 @@ import { requireArtifact } from "./artifacts.ts";
 
 export const separateVocalsStage: AnalysisStage = {
   id: "separate-vocals",
+  // When skipped, later stages use the original mix (see speechSourceKey); no music stem exists.
+  shouldSkip: (job) => !job.settings.separateVocals,
   run: async (context) => {
     const job = context.job();
     const input = resolveInside(context.jobDir, requireArtifact(job, "audioFull"));

@@ -9,6 +9,7 @@ export const jobSettingsInputSchema = z
     maxClipSec: z.number(),
     targetClipSec: z.number(),
     maxCandidates: z.number().int(),
+    separateVocals: z.boolean(),
     denoise: z.boolean(),
     musicVolume: z.number(),
     subtitleStyle: z.enum(["bold-center", "lower-third"]),

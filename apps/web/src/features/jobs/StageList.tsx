@@ -1,4 +1,5 @@
 import type { StageId, StageState } from "@clipper/shared";
+import type { ReactNode } from "react";
 import { ProgressBar } from "../../components/ui/ProgressBar.tsx";
 import { StatusBadge } from "../../components/ui/StatusBadge.tsx";
 import { copy } from "../../lib/copy.ts";
@@ -8,6 +9,8 @@ import { stageStatusTone } from "./status-tone.ts";
 
 type StageListProps = {
   stages: readonly { id: StageId; state: StageState }[];
+  /** Optional per-stage control, e.g. a skip button. */
+  renderAction?: (id: StageId, state: StageState) => ReactNode;
 };
 
 const progressTone = {
@@ -19,7 +22,7 @@ const progressTone = {
   cancelled: "muted",
 } as const;
 
-export function StageList({ stages }: StageListProps) {
+export function StageList({ stages, renderAction }: StageListProps) {
   return (
     <ol className={styles.list}>
       {stages.map(({ id, state }) => {
@@ -36,6 +39,7 @@ export function StageList({ stages }: StageListProps) {
                     {formatDuration(elapsedSec(state.startedAt, state.finishedAt))}
                   </span>
                 )}
+                {renderAction?.(id, state)}
                 <StatusBadge
                   tone={stageStatusTone[state.status]}
                   label={copy.stageStatus[state.status]}

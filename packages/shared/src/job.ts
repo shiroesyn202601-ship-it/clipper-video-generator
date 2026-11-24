@@ -65,6 +65,7 @@ export const jobSettingsSchema = z
       .min(1)
       .max(CLIP_LIMITS.maxCandidates)
       .default(DEFAULT_JOB_SETTINGS.maxCandidates),
+    separateVocals: z.boolean().default(DEFAULT_JOB_SETTINGS.separateVocals),
     denoise: z.boolean().default(DEFAULT_JOB_SETTINGS.denoise),
     musicVolume: z.number().min(0).max(1).default(DEFAULT_JOB_SETTINGS.musicVolume),
     subtitleStyle: z
@@ -82,6 +83,20 @@ export const jobSettingsSchema = z
     { message: "targetClipSec must be between min and max", path: ["targetClipSec"] },
   );
 export type JobSettings = z.infer<typeof jobSettingsSchema>;
+
+/**
+ * Optional analysis stages and the setting that turns each one on. Clean studio podcasts
+ * gain nothing from them, and Demucs alone takes about the audio's own length on a CPU.
+ */
+export const SKIPPABLE_STAGES = {
+  "separate-vocals": "separateVocals",
+  denoise: "denoise",
+} as const satisfies Partial<Record<AnalysisStageId, keyof JobSettings>>;
+export type SkippableStageId = keyof typeof SKIPPABLE_STAGES;
+
+export function isSkippableStage(id: string): id is SkippableStageId {
+  return Object.hasOwn(SKIPPABLE_STAGES, id);
+}
 
 export const jobSourceSchema = z.discriminatedUnion("kind", [
   z.object({ kind: z.literal("url"), url: z.string().url() }),

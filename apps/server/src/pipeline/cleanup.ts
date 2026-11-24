@@ -1,17 +1,18 @@
 import { rm } from "node:fs/promises";
 import type { Job, JobArtifacts } from "@clipper/shared";
 import { resolveInside } from "../lib/fs-utils.ts";
+import { cleanVocalsKey } from "./stages/artifacts.ts";
 
 /**
  * Intermediate audio that no clip stage reads once analysis is done. Together they take
  * roughly 1 GB per hour of podcast, so they are removed when the job becomes ready.
- * Kept: vocals_clean (clip speech), no_vocals (optional music), the source video.
+ * Never removed: the speech track clips use (which is audio_full.wav itself when separation
+ * was skipped), no_vocals (optional music) and the source video.
  */
 export function disposableArtifacts(job: Job): (keyof JobArtifacts)[] {
-  const keys: (keyof JobArtifacts)[] = ["audioFull", "audio16k"];
-  // Without a denoised track, clips read the separated vocals, so they must stay.
-  if (job.artifacts.vocalsClean) keys.push("vocals");
-  return keys.filter((key) => job.artifacts[key] !== undefined);
+  const keep = cleanVocalsKey(job);
+  const candidates: (keyof JobArtifacts)[] = ["audioFull", "audio16k", "vocals"];
+  return candidates.filter((key) => key !== keep && job.artifacts[key] !== undefined);
 }
 
 export async function removeIntermediateAudio(

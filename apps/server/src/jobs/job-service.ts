@@ -6,7 +6,9 @@ import type { Readable } from "node:stream";
 import { pipeline } from "node:stream/promises";
 import {
   ANALYSIS_STAGE_IDS,
+  SKIPPABLE_STAGES,
   createStageState,
+  isSkippableStage,
   jobSettingsSchema,
   type Job,
   type JobArtifacts,
@@ -163,6 +165,39 @@ export class JobService {
     }
     await this.#queue.idleFor(jobId);
     return this.#store.get(jobId);
+  }
+
+  /**
+   * Turns an optional stage off for this job. A pending stage is skipped when the pipeline
+   * reaches it; a running one is stopped and the pipeline continues right after it.
+   */
+  async skipStage(jobId: string, stageId: string): Promise<Job> {
+    if (!isSkippableStage(stageId)) {
+      throw new AppError({
+        code: "STAGE_NOT_SKIPPABLE",
+        message: `Stage ${stageId} cannot be skipped`,
+        userMessage: "Tahap ini wajib dan tidak bisa dilewati.",
+        statusCode: 400,
+      });
+    }
+    const state = this.#store.get(jobId).stages[stageId];
+    if (state.status === "done" || state.status === "skipped") {
+      throw conflict(`Stage ${stageId} already finished`, "Tahap ini sudah selesai.");
+    }
+    await this.#store.update(jobId, (draft) => {
+      draft.settings[SKIPPABLE_STAGES[stageId]] = false;
+    });
+    if (state.status !== "running") return this.#store.get(jobId);
+
+    this.#queue.cancelJob(jobId);
+    await this.#queue.idleFor(jobId);
+    const updated = await this.#store.update(jobId, (draft) => {
+      draft.stages[stageId] = createStageState();
+      draft.status = "queued";
+      draft.error = null;
+    });
+    this.start(jobId);
+    return updated;
   }
 
   /** Continues from the first stage that did not finish. */

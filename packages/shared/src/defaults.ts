@@ -8,6 +8,7 @@ export const DEFAULT_JOB_SETTINGS = {
   maxClipSec: 60,
   targetClipSec: 35,
   maxCandidates: 10,
+  separateVocals: true,
   denoise: true,
   musicVolume: 0,
   subtitleStyle: "bold-center",

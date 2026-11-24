@@ -114,6 +114,14 @@ export function registerJobRoutes(
     return service.cancel(id);
   });
 
+  app.post("/jobs/:id/stages/:stageId/skip", async (request): Promise<Job> => {
+    const { id, stageId } = parseInput(
+      z.object({ id: z.string().uuid(), stageId: z.string().min(1).max(40) }),
+      request.params,
+    );
+    return service.skipStage(id, stageId);
+  });
+
   app.post("/jobs/:id/retry", async (request): Promise<Job> => {
     const { id } = parseInput(jobParamsSchema, request.params);
     return service.retry(id);

@@ -1,11 +1,13 @@
 import {
   ANALYSIS_STAGE_IDS,
   analysisProgress,
+  isSkippableStage,
   type ClipCandidate,
   type Job,
 } from "@clipper/shared";
 import { useCallback, useRef, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
+import { Button } from "../components/ui/Button.tsx";
 import { Icon } from "../components/ui/Icon.tsx";
 import { ProgressBar } from "../components/ui/ProgressBar.tsx";
 import { Tabs, type TabItem } from "../components/ui/Tabs.tsx";
@@ -16,7 +18,7 @@ import { MakeClipButton } from "../features/clips/MakeClipButton.tsx";
 import { JobHeader } from "../features/jobs/JobHeader.tsx";
 import { SourcePlayer } from "../features/jobs/SourcePlayer.tsx";
 import { StageList } from "../features/jobs/StageList.tsx";
-import { useJob, useJobEvents } from "../features/jobs/job-queries.ts";
+import { useJob, useJobEvents, useSkipStage } from "../features/jobs/job-queries.ts";
 import { TranscriptPanel } from "../features/transcript/TranscriptPanel.tsx";
 import { useTranscript } from "../features/transcript/use-transcript.ts";
 import { errorText } from "../lib/api.ts";
@@ -50,6 +52,7 @@ export function JobPage() {
 function JobView({ job, onDeleted }: { job: Job; onDeleted: () => void }) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const [currentTimeSec, setCurrentTimeSec] = useState(0);
+  const skipStage = useSkipStage(job.id);
   const hasTranscript = job.stages.transcribe.status === "done";
   const hasCandidates = job.stages["find-moments"].status === "done";
   const [panel, setPanel] = useState<PanelId>(hasCandidates ? "candidates" : "transcript");
@@ -132,7 +135,21 @@ function JobView({ job, onDeleted }: { job: Job; onDeleted: () => void }) {
   ];
 
   const stageList = (
-    <StageList stages={ANALYSIS_STAGE_IDS.map((id) => ({ id, state: job.stages[id] }))} />
+    <StageList
+      stages={ANALYSIS_STAGE_IDS.map((id) => ({ id, state: job.stages[id] }))}
+      renderAction={(id, state) =>
+        isSkippableStage(id) && (state.status === "pending" || state.status === "running") ? (
+          <Button
+            variant="ghost"
+            aria-label={copy.job.skipStageLabel(copy.stageLabel[id])}
+            isBusy={skipStage.isPending && skipStage.variables === id}
+            onClick={() => skipStage.mutate(id)}
+          >
+            {copy.job.skipStage}
+          </Button>
+        ) : null
+      }
+    />
   );
   // Once analysis is over the stages are history: fold them away so the candidates lead.
   const stages =

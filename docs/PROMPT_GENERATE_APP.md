@@ -174,6 +174,7 @@ JobSettings {
   maxClipSec: number                     // default 60
   targetClipSec: number                  // default 35
   maxCandidates: number                  // default 10
+  separateVocals: boolean                // default true; matikan untuk podcast tanpa musik (Demucs dilewati)
   denoise: boolean                       // default true
   musicVolume: number                    // 0..1, default 0 (musik latar dibuang)
   subtitleStyle: "bold-center" | "lower-third"  // default "bold-center"
@@ -209,27 +210,28 @@ Caption { startSec: number; endSec: number; text: string }   // waktu relatif te
 
 Base: `http://127.0.0.1:5174/api`. Request dan response dalam JSON. Semua body divalidasi zod.
 
-| Method | Path                             | Fungsi                                                                                                |
-| ------ | -------------------------------- | ----------------------------------------------------------------------------------------------------- |
-| GET    | `/health`                        | status tiap tool eksternal (ada/tidak, versi)                                                         |
-| GET    | `/jobs`                          | daftar job (ringkas), terbaru di atas                                                                 |
-| POST   | `/jobs`                          | buat job dari URL: `{ url, settings? }`                                                               |
-| POST   | `/jobs/upload`                   | buat job dari file (multipart, stream ke disk, batas ukuran dari config)                              |
-| GET    | `/jobs/:id`                      | detail job lengkap                                                                                    |
-| POST   | `/jobs/:id/cancel`               | batalkan proses yang sedang berjalan                                                                  |
-| POST   | `/jobs/:id/retry`                | lanjutkan dari stage yang gagal                                                                       |
-| DELETE | `/jobs/:id`                      | hapus job + foldernya (UI wajib meminta konfirmasi)                                                   |
-| GET    | `/jobs/:id/transcript`           | transcript ternormalisasi                                                                             |
-| GET    | `/jobs/:id/transcript.vtt`       | transcript sebagai WebVTT (track caption di pratinjau)                                                |
-| GET    | `/jobs/:id/candidates`           | daftar kandidat klip                                                                                  |
-| POST   | `/jobs/:id/clips`                | buat klip dari kandidat: `{ candidateId, startSec?, endSec? }`                                        |
-| PATCH  | `/jobs/:id/clips/:clipId`        | ubah rentang (caption dibangun ulang, semua stage di-reset) atau caption saja (stage render di-reset) |
-| POST   | `/jobs/:id/clips/:clipId/render` | jalankan track-faces → reframe → render                                                               |
-| POST   | `/jobs/:id/clips/:clipId/cancel` | batalkan render klip                                                                                  |
-| POST   | `/jobs/:id/clips/:clipId/reveal` | buka folder klip di file manager OS (khusus aplikasi lokal)                                           |
-| DELETE | `/jobs/:id/clips/:clipId`        | hapus klip + foldernya                                                                                |
-| GET    | `/jobs/:id/media/*`              | stream file dari folder job (mendukung HTTP Range, hanya di dalam folder job)                         |
-| GET    | `/jobs/:id/events`               | **SSE**: `job-update` (snapshot job lengkap, termasuk klip) dan `job-deleted`                         |
+| Method | Path                             | Fungsi                                                                                                   |
+| ------ | -------------------------------- | -------------------------------------------------------------------------------------------------------- |
+| GET    | `/health`                        | status tiap tool eksternal (ada/tidak, versi)                                                            |
+| GET    | `/jobs`                          | daftar job (ringkas), terbaru di atas                                                                    |
+| POST   | `/jobs`                          | buat job dari URL: `{ url, settings? }`                                                                  |
+| POST   | `/jobs/upload`                   | buat job dari file (multipart, stream ke disk, batas ukuran dari config)                                 |
+| GET    | `/jobs/:id`                      | detail job lengkap                                                                                       |
+| POST   | `/jobs/:id/cancel`               | batalkan proses yang sedang berjalan                                                                     |
+| POST   | `/jobs/:id/retry`                | lanjutkan dari stage yang gagal                                                                          |
+| POST   | `/jobs/:id/stages/:stageId/skip` | lewati stage opsional (`separate-vocals`, `denoise`) yang belum selesai; yang sedang berjalan dihentikan |
+| DELETE | `/jobs/:id`                      | hapus job + foldernya (UI wajib meminta konfirmasi)                                                      |
+| GET    | `/jobs/:id/transcript`           | transcript ternormalisasi                                                                                |
+| GET    | `/jobs/:id/transcript.vtt`       | transcript sebagai WebVTT (track caption di pratinjau)                                                   |
+| GET    | `/jobs/:id/candidates`           | daftar kandidat klip                                                                                     |
+| POST   | `/jobs/:id/clips`                | buat klip dari kandidat: `{ candidateId, startSec?, endSec? }`                                           |
+| PATCH  | `/jobs/:id/clips/:clipId`        | ubah rentang (caption dibangun ulang, semua stage di-reset) atau caption saja (stage render di-reset)    |
+| POST   | `/jobs/:id/clips/:clipId/render` | jalankan track-faces → reframe → render                                                                  |
+| POST   | `/jobs/:id/clips/:clipId/cancel` | batalkan render klip                                                                                     |
+| POST   | `/jobs/:id/clips/:clipId/reveal` | buka folder klip di file manager OS (khusus aplikasi lokal)                                              |
+| DELETE | `/jobs/:id/clips/:clipId`        | hapus klip + foldernya                                                                                   |
+| GET    | `/jobs/:id/media/*`              | stream file dari folder job (mendukung HTTP Range, hanya di dalam folder job)                            |
+| GET    | `/jobs/:id/events`               | **SSE**: `job-update` (snapshot job lengkap, termasuk klip) dan `job-deleted`                            |
 
 Format error seragam: `{ error: { code: string, message: string } }` dengan HTTP status yang tepat (400 validasi, 404 tidak ada, 409 konflik state, 500 tak terduga). `message` berisi teks bahasa Indonesia untuk user.
 

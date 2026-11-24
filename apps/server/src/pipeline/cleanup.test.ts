@@ -33,6 +33,11 @@ describe("intermediate audio cleanup", () => {
     expect(disposableArtifacts(job)).toEqual(["audioFull", "audio16k"]);
   });
 
+  it("keeps the original mix when separation and denoise were both skipped", () => {
+    const job = jobWith({ audioFull: "audio/audio_full.wav", audio16k: "audio/b.wav" });
+    expect(disposableArtifacts(job)).toEqual(["audio16k"]);
+  });
+
   it("removes intermediate files but keeps what clips need", async () => {
     const jobDir = await mkdtemp(path.join(os.tmpdir(), "clipper-cleanup-"));
     await mkdir(path.join(jobDir, "audio"));

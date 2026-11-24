@@ -85,6 +85,14 @@ export function useJobAction(action: "cancel" | "retry") {
   });
 }
 
+export function useSkipStage(jobId: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (stageId: string) => api.skipStage(jobId, stageId),
+    onSuccess: (job) => storeJob(queryClient, job),
+  });
+}
+
 export function useDeleteJob() {
   const queryClient = useQueryClient();
   return useMutation({

@@ -106,6 +106,15 @@ export function SettingsFields({ value, onChange }: SettingsFieldsProps) {
       <label className={styles.check}>
         <input
           type="checkbox"
+          checked={value.separateVocals}
+          onChange={(event) => set("separateVocals", event.target.checked)}
+        />
+        <span>{copy.newJob.separateVocals}</span>
+      </label>
+
+      <label className={styles.check}>
+        <input
+          type="checkbox"
           checked={value.denoise}
           onChange={(event) => set("denoise", event.target.checked)}
         />
