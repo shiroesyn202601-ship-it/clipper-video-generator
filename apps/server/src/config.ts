@@ -26,6 +26,8 @@ const envSchema = z.object({
   ),
   WHISPER_MODEL: z.string().default("./tools/whisper.cpp/models/ggml-medium.bin"),
   WHISPER_THREADS: z.coerce.number().int().positive().default(4),
+  /** Caption fonts (SETUP.md step 5c). */
+  FONTS_DIR: z.string().default("./tools/fonts"),
   FACE_MODEL: z.string().default("./tools/models/face_detection_yunet_2023mar.onnx"),
   DEMUCS_MODEL: z.string().default("htdemucs"),
   DEMUCS_DEVICE: z.enum(["cpu", "cuda"]).default("cpu"),
@@ -68,6 +70,7 @@ function loadConfig() {
       threads: env.WHISPER_THREADS,
     }),
     faceModel: path.resolve(REPO_ROOT, env.FACE_MODEL),
+    fontsDir: path.resolve(REPO_ROOT, env.FONTS_DIR),
     demucs: Object.freeze({ model: env.DEMUCS_MODEL, device: env.DEMUCS_DEVICE }),
     groq: Object.freeze({
       apiKeys: Object.freeze(parseApiKeys(env.GROQ_API_KEYS)),

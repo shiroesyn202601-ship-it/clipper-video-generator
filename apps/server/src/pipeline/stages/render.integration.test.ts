@@ -81,6 +81,7 @@ describe.skipIf(!hasFfmpeg)("render stage (real ffmpeg)", () => {
       output: null,
       error: null,
       renderRequestedAt: null,
+      captionStyle: null,
     };
     const job: Job = {
       id: "job",

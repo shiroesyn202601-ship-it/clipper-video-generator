@@ -127,6 +127,7 @@ WHISPER_LANGUAGE=id                           # atau "auto"
 WHISPER_THREADS=4
 GROQ_API_KEYS=                                # opsional, beberapa key dipisah koma
 GROQ_MODEL=whisper-large-v3-turbo
+FONTS_DIR=./tools/fonts                      # font caption (opsional)
 FACE_MODEL=./tools/models/face_detection_yunet_2023mar.onnx
 DEMUCS_MODEL=htdemucs
 DEMUCS_DEVICE=cpu                             # atau "cuda"
@@ -335,6 +336,13 @@ Tanpa AI cloud. Algoritma di `apps/server/src/pipeline/moments/` dipecah menjadi
 - Kegagalan: stage menjadi `failed`, `job.error` diisi `userMessage` yang jelas, misalnya "Video tidak bisa diunduh. Pastikan URL publik dan yt-dlp sudah versi terbaru." Log lengkap ada di file log dan bisa dibuka dari UI.
 
 ---
+
+### 7.11 Gaya caption per klip (opsional, kompatibel mundur)
+
+- `Clip.captionStyle` (`packages/shared/src/caption-style.ts`) bernilai `null` untuk klip lama → render memakai `buildAss` lama (sesuai `JobSettings.subtitleStyle`), hasilnya identik dengan sebelumnya.
+- Bila diisi, `buildStyledAss` (`pipeline/captions/styled-ass.ts`) dipakai: font, ukuran, kapital, warna teks/sorotan/garis tepi, tebal garis, bayangan, kotak latar, posisi vertikal, animasi muncul (pop/fade/naik), dan sorotan kata yang diucapkan (warna/pill/karaoke). Waktu per kata dibagi dari rentang caption menurut panjang kata, karena caption bisa diedit user.
+- Font dari `FONTS_DIR` disalin ke `clips/<id>/fonts/` lalu filter `ass=captions.ass:fontsdir=fonts`.
+- Preset: Tebal kuning, Pill ungu, Karaoke, Kotak bersih, Komik. Default untuk klip baru disimpan di `workspace/settings.json` (`GET/PATCH /api/settings`); `GET /api/fonts` melaporkan font yang sudah diunduh.
 
 ## 8. UI / UX (apps/web)
 

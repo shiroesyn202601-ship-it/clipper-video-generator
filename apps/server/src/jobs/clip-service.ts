@@ -14,6 +14,7 @@ import {
 } from "@clipper/shared";
 import { AppError } from "../lib/errors.ts";
 import { buildCaptions, wordsInRange } from "../pipeline/captions/build-captions.ts";
+import type { SettingsStore } from "../settings/settings-store.ts";
 import type { JobQueue } from "./job-queue.ts";
 import type { JobService } from "./job-service.ts";
 import type { JobStore } from "./job-store.ts";
@@ -39,11 +40,13 @@ export class ClipService {
   readonly #store: JobStore;
   readonly #queue: JobQueue;
   readonly #jobs: JobService;
+  readonly #settings: SettingsStore;
 
-  constructor(store: JobStore, queue: JobQueue, jobs: JobService) {
+  constructor(store: JobStore, queue: JobQueue, jobs: JobService, settings: SettingsStore) {
     this.#store = store;
     this.#queue = queue;
     this.#jobs = jobs;
+    this.#settings = settings;
   }
 
   async create(jobId: string, body: CreateClipBody): Promise<Clip> {
@@ -71,6 +74,7 @@ export class ClipService {
       output: null,
       error: null,
       renderRequestedAt: null,
+      captionStyle: this.#settings.get().defaultCaptionStyle,
     };
     await this.#store.update(jobId, (draft) => {
       draft.clips.push(clip);
@@ -98,15 +102,17 @@ export class ClipService {
     if (isRangeChanged) this.#validateRange(job, startSec, endSec);
     const captions =
       body.captions ?? (isRangeChanged ? await this.#captionsFor(jobId, startSec, endSec) : null);
+    const isStyleChanged = body.captionStyle !== undefined;
 
     const updated = await this.#store.update(jobId, (draft) => {
       const target = this.#find(draft, clipId);
       target.startSec = startSec;
       target.endSec = endSec;
       if (captions) target.captions = captions;
+      if (body.captionStyle !== undefined) target.captionStyle = body.captionStyle;
       if (isRangeChanged) target.stages = newClipStages();
-      else if (captions) target.stages.render = createStageState();
-      if (isRangeChanged || captions) {
+      else if (captions || isStyleChanged) target.stages.render = createStageState();
+      if (isRangeChanged || captions || isStyleChanged) {
         target.output = null;
         target.error = null;
         target.renderRequestedAt = null;

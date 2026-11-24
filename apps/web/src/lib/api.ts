@@ -1,11 +1,14 @@
 import {
+  appSettingsSchema,
   healthReportSchema,
   jobSchema,
   jobSummarySchema,
   candidatesFileSchema,
   clipSchema,
   transcriptSchema,
+  type AppSettings,
   type CandidatesFile,
+  type UpdateAppSettingsBody,
   type Clip,
   type CreateClipBody,
   type UpdateClipBody,
@@ -155,6 +158,18 @@ export const api = {
   deleteClip: async (jobId: string, clipId: string): Promise<void> => {
     await request(clipPath(jobId, clipId), { method: "DELETE", schema: noContentSchema });
   },
+
+  getSettings: (signal?: AbortSignal): Promise<AppSettings> =>
+    request("/settings", { schema: appSettingsSchema, ...(signal ? { signal } : {}) }),
+
+  updateSettings: (body: UpdateAppSettingsBody): Promise<AppSettings> =>
+    request("/settings", { method: "PATCH", body, schema: appSettingsSchema }),
+
+  /** Font name → downloaded (SETUP.md step 5c). */
+  getFonts: (signal?: AbortSignal): Promise<Record<string, boolean>> =>
+    request("/fonts", { schema: z.record(z.boolean()), ...(signal ? { signal } : {}) }),
+
+  fontUrl: (file: string): string => `${API_BASE}/fonts/${encodeURIComponent(file)}`,
 
   transcriptVttUrl: (jobId: string): string =>
     `${API_BASE}/jobs/${encodeURIComponent(jobId)}/transcript.vtt`,

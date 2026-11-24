@@ -1,14 +1,46 @@
-import { writeFile } from "node:fs/promises";
+import { appendFile, copyFile, mkdir, writeFile } from "node:fs/promises";
 import path from "node:path";
-import { RENDER_SETTINGS } from "@clipper/shared";
+import { CAPTION_FONTS, RENDER_SETTINGS, type CaptionStyle } from "@clipper/shared";
+import type { Config } from "../../config.ts";
 import { AppError } from "../../lib/errors.ts";
 import { toJobRelative } from "../../lib/fs-utils.ts";
 import { probeMedia, runFfmpeg } from "../../tools/ffmpeg.ts";
 import { buildAss } from "../captions/ass.ts";
+import { buildStyledAss } from "../captions/styled-ass.ts";
 import type { ClipStage } from "../stage.ts";
 
 /** Allowed difference between the rendered and the requested clip length (seconds). */
 const DURATION_TOLERANCE_SEC = 0.5;
+
+/**
+ * Copies the caption font next to captions.ass so libass finds it through a relative
+ * `fontsdir` (no Windows path escaping inside the filter). Returns the filter option, or ""
+ * when the font is a system font or not downloaded (libass then falls back to another font).
+ */
+async function prepareFont(
+  config: Config,
+  style: CaptionStyle,
+  clipDir: string,
+  logFile: string,
+): Promise<string> {
+  const file = CAPTION_FONTS[style.font];
+  if (file === null) return "";
+  const fontsDir = path.join(clipDir, "fonts");
+  await mkdir(fontsDir, { recursive: true });
+  try {
+    await copyFile(path.join(config.fontsDir, file), path.join(fontsDir, file));
+    return ":fontsdir=fonts";
+  } catch {
+    await mkdir(path.dirname(logFile), { recursive: true });
+    await appendFile(
+      logFile,
+      `[render] font ${file} not found in ${config.fontsDir}; libass uses a fallback font (SETUP.md 5c)
+`,
+      "utf8",
+    );
+    return "";
+  }
+}
 
 export const renderStage: ClipStage = {
   id: "render",
@@ -17,11 +49,14 @@ export const renderStage: ClipStage = {
     const clip = context.clip();
     const durationSec = clip.endSec - clip.startSec;
 
-    const ass = buildAss(clip.captions, {
-      style: job.settings.subtitleStyle,
-      width: RENDER_SETTINGS.width,
-      height: RENDER_SETTINGS.height,
-    });
+    const size = { width: RENDER_SETTINGS.width, height: RENDER_SETTINGS.height };
+    // Clips without a caption style keep the legacy look, so older clips render unchanged.
+    const ass = clip.captionStyle
+      ? buildStyledAss(clip.captions, { style: clip.captionStyle, ...size })
+      : buildAss(clip.captions, { style: job.settings.subtitleStyle, ...size });
+    const fontOption = clip.captionStyle
+      ? await prepareFont(context.config, clip.captionStyle, context.clipDir, context.logFile)
+      : "";
     await writeFile(path.join(context.clipDir, "captions.ass"), ass, "utf8");
 
     const outputPath = path.join(context.clipDir, "final.mp4");
@@ -39,7 +74,7 @@ export const renderStage: ClipStage = {
         "-map",
         "1:a:0",
         "-vf",
-        "ass=captions.ass",
+        `ass=captions.ass${fontOption}`,
         "-r",
         String(RENDER_SETTINGS.fps),
         "-c:v",

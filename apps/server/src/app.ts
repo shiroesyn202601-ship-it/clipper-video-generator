@@ -7,6 +7,7 @@ import type { Config } from "./config.ts";
 import { registerClipRoutes } from "./http/clip-routes.ts";
 import { registerHealthRoutes } from "./http/health-routes.ts";
 import { registerJobRoutes } from "./http/job-routes.ts";
+import { registerSettingsRoutes } from "./http/settings-routes.ts";
 import { ClipService } from "./jobs/clip-service.ts";
 import { JobQueue } from "./jobs/job-queue.ts";
 import { JobService } from "./jobs/job-service.ts";
@@ -14,6 +15,7 @@ import { JobStore } from "./jobs/job-store.ts";
 import { AppError } from "./lib/errors.ts";
 import { createPipelineRunner } from "./pipeline/run-pipeline.ts";
 import { analysisStages, clipStages } from "./pipeline/stages/index.ts";
+import { SettingsStore } from "./settings/settings-store.ts";
 
 export type ApiErrorBody = { error: { code: string; message: string } };
 
@@ -46,6 +48,8 @@ export async function buildApp(config: Config): Promise<FastifyInstance> {
   await mkdir(config.workspaceDir, { recursive: true });
   const store = new JobStore(config.workspaceDir, app.log);
   await store.load();
+  const settings = new SettingsStore(config.workspaceDir, app.log);
+  await settings.load();
 
   // Decorates reply.sendFile (with HTTP Range support) without serving anything by itself.
   await app.register(fastifyStatic, { root: config.workspaceDir, serve: false });
@@ -61,13 +65,14 @@ export async function buildApp(config: Config): Promise<FastifyInstance> {
   });
   const queue = new JobQueue(runTask, app.log);
   const service = new JobService(store, queue);
-  const clips = new ClipService(store, queue, service);
+  const clips = new ClipService(store, queue, service, settings);
 
   await app.register(
     (api, _options, done) => {
       registerHealthRoutes(api, config);
       registerJobRoutes(api, { service, store });
       registerClipRoutes(api, { clips });
+      registerSettingsRoutes(api, { config, settings });
       done();
     },
     { prefix: "/api" },

@@ -167,6 +167,24 @@ curl -L -o tools/models/face_detection_yunet_2023mar.onnx https://github.com/ope
 
 ---
 
+## 5c. (Opsional) Font caption
+
+Dipakai oleh fitur **Gaya caption** di editor klip. Semua font berlisensi bebas (SIL OFL / Apache), boleh dipakai untuk video komersial.
+Tanpa langkah ini, klip lama dan gaya "Bawaan lama" tetap jalan; gaya baru memakai font pengganti dan pilihan font di editor ditandai "(belum diunduh)".
+
+```bash
+mkdir -p tools/fonts
+curl -L -o tools/fonts/Montserrat-ExtraBold.ttf https://raw.githubusercontent.com/JulietaUla/Montserrat/master/fonts/ttf/Montserrat-ExtraBold.ttf
+curl -L -o tools/fonts/Anton-Regular.ttf https://raw.githubusercontent.com/google/fonts/main/ofl/anton/Anton-Regular.ttf
+curl -L -o tools/fonts/BebasNeue-Regular.ttf https://raw.githubusercontent.com/google/fonts/main/ofl/bebasneue/BebasNeue-Regular.ttf
+curl -L -o tools/fonts/Poppins-Bold.ttf https://raw.githubusercontent.com/google/fonts/main/ofl/poppins/Poppins-Bold.ttf
+curl -L -o tools/fonts/LuckiestGuy-Regular.ttf https://raw.githubusercontent.com/google/fonts/main/apache/luckiestguy/LuckiestGuy-Regular.ttf
+```
+
+Lokasi folder bisa diubah lewat `FONTS_DIR` di `.env`.
+
+---
+
 ## 5b. Kebutuhan disk
 
 Perkiraan per jam podcast (video 1080p):
@@ -245,6 +263,7 @@ npm run check:py    # ruff + pytest (Python worker)
 - [ ] `.venv` terbentuk dan `import cv2, norfair, demucs, df` sukses
 - [ ] `tools/whisper-bin/whisper-cli.exe` (Windows) atau `tools/whisper.cpp/build/bin/whisper-cli` ada
 - [ ] `tools/whisper.cpp/models/ggml-medium.bin` dan `tools/models/face_detection_yunet_2023mar.onnx` ada
+- [ ] (Opsional) font caption ada di `tools/fonts/` (langkah 5c)
 - [ ] (Opsional) `GROQ_API_KEYS` di `.env` sudah diisi bila ingin transkrip online
 - [ ] `npm run dev`, lalu halaman Status tools menampilkan semua tool dengan status siap
 

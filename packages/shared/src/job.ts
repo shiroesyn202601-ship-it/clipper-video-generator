@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { captionStyleSchema } from "./caption-style.ts";
 import { CLIP_LIMITS, DEFAULT_JOB_SETTINGS } from "./defaults.ts";
 
 export const ANALYSIS_STAGE_IDS = [
@@ -147,6 +148,8 @@ export const clipSchema = z.object({
   error: z.object({ code: z.string(), userMessage: z.string() }).nullable(),
   /** Set when the user asks for a render; cleared when the clip is edited. */
   renderRequestedAt: z.string().nullable().default(null),
+  /** null = legacy look from JobSettings.subtitleStyle (clips made before caption styling). */
+  captionStyle: captionStyleSchema.nullable().default(null),
 });
 export type Clip = z.infer<typeof clipSchema>;
 

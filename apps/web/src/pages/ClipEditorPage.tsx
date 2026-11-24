@@ -4,6 +4,7 @@ import {
   clipStatus,
   splitSentences,
   type Caption,
+  type CaptionStyle,
   type Clip,
   type Job,
 } from "@clipper/shared";
@@ -15,6 +16,7 @@ import { Icon } from "../components/ui/Icon.tsx";
 import { ProgressBar } from "../components/ui/ProgressBar.tsx";
 import { StatusBadge } from "../components/ui/StatusBadge.tsx";
 import { CaptionEditor } from "../features/clips/CaptionEditor.tsx";
+import { CaptionStyleEditor } from "../features/clips/CaptionStyleEditor.tsx";
 import { ClipPreview } from "../features/clips/ClipPreview.tsx";
 import { RangeControls } from "../features/clips/RangeControls.tsx";
 import {
@@ -27,6 +29,7 @@ import {
 import { clipStatusTone } from "../features/clips/clip-status.ts";
 import { StageList } from "../features/jobs/StageList.tsx";
 import { useJob, useJobEvents } from "../features/jobs/job-queries.ts";
+import { useAppSettings, useUpdateAppSettings } from "../features/settings/settings-queries.ts";
 import { useTranscript } from "../features/transcript/use-transcript.ts";
 import { api, errorText } from "../lib/api.ts";
 import { copy } from "../lib/copy.ts";
@@ -76,30 +79,51 @@ function ClipEditor({ job, clip, number, onDeleted }: ClipEditorProps) {
   const reveal = useRevealClip(job.id, clip.id);
   const remove = useDeleteClip(job.id, clip.id);
   const [draftCaptions, setDraftCaptions] = useState<Caption[] | null>(null);
+  /** undefined = unchanged; null = back to the legacy look. */
+  const [draftStyle, setDraftStyle] = useState<CaptionStyle | null | undefined>(undefined);
+  const settings = useAppSettings();
+  const saveSettings = useUpdateAppSettings();
   const [isConfirmingDelete, setIsConfirmingDelete] = useState(false);
 
   const status = clipStatus(clip);
   const isBusy = status === "rendering" || status === "queued";
   const captions = draftCaptions ?? clip.captions;
-  const isDirty = draftCaptions !== null;
+  const captionStyle = draftStyle === undefined ? clip.captionStyle : draftStyle;
+  const isDefaultStyle =
+    JSON.stringify(settings.data?.defaultCaptionStyle ?? null) === JSON.stringify(captionStyle);
+  const isDirty = draftCaptions !== null || draftStyle !== undefined;
   const sentences = useMemo(
     () => (transcript.data ? splitSentences(transcript.data) : []),
     [transcript.data],
   );
-  const error = update.error ?? render.error ?? cancel.error ?? remove.error ?? reveal.error;
+  const error =
+    update.error ??
+    render.error ??
+    cancel.error ??
+    remove.error ??
+    reveal.error ??
+    saveSettings.error;
   const sourcePath = job.artifacts.sourceVideo;
+
+  const discardDrafts = (): void => {
+    setDraftCaptions(null);
+    setDraftStyle(undefined);
+  };
 
   const handleRender = (): void => {
     requestNotificationPermission();
-    if (!draftCaptions) {
+    if (!isDirty) {
       render.mutate();
       return;
     }
     update.mutate(
-      { captions: draftCaptions },
+      {
+        ...(draftCaptions ? { captions: draftCaptions } : {}),
+        ...(draftStyle !== undefined ? { captionStyle: draftStyle } : {}),
+      },
       {
         onSuccess: () => {
-          setDraftCaptions(null);
+          discardDrafts();
           render.mutate();
         },
       },
@@ -164,6 +188,20 @@ function ClipEditor({ job, clip, number, onDeleted }: ClipEditorProps) {
             <CaptionEditor captions={captions} isDisabled={isBusy} onChange={setDraftCaptions} />
           </section>
 
+          <section className={styles.section} aria-labelledby="caption-style-title">
+            <h2 id="caption-style-title" className={styles.subtitle}>
+              {copy.captionStyle.title}
+            </h2>
+            <CaptionStyleEditor
+              value={captionStyle}
+              isDisabled={isBusy}
+              isDefault={isDefaultStyle}
+              isSavingDefault={saveSettings.isPending}
+              onChange={setDraftStyle}
+              onSaveDefault={(style) => saveSettings.mutate({ defaultCaptionStyle: style })}
+            />
+          </section>
+
           <div className={styles.renderBar}>
             {isBusy ? (
               <>
@@ -176,7 +214,7 @@ function ClipEditor({ job, clip, number, onDeleted }: ClipEditorProps) {
             ) : (
               <>
                 {isDirty && (
-                  <Button variant="ghost" onClick={() => setDraftCaptions(null)}>
+                  <Button variant="ghost" onClick={discardDrafts}>
                     {copy.clipEditor.discard}
                   </Button>
                 )}
