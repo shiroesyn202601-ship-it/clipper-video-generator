@@ -72,7 +72,7 @@ export function NewJobForm() {
           aria-invalid={validationError !== null}
         />
         <Button type="submit" variant="primary" size="lg" isBusy={isBusy}>
-          {copy.newJob.submit}
+          {file ? copy.newJob.submitUpload : copy.newJob.submit}
         </Button>
       </div>
       <p id={hintId} className={styles.hint}>

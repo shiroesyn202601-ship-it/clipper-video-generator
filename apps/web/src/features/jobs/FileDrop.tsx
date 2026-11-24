@@ -1,4 +1,5 @@
 import { useId, useState, type DragEvent } from "react";
+import { Button } from "../../components/ui/Button.tsx";
 import { copy } from "../../lib/copy.ts";
 import styles from "./FileDrop.module.css";
 
@@ -38,7 +39,9 @@ export function FileDrop({ file, onChange, isDisabled }: FileDropProps) {
         <span className={styles.title}>
           {file ? copy.newJob.fileSelected(file.name) : copy.newJob.fileLabel}
         </span>
-        <span className={styles.hint}>{copy.newJob.fileHint}</span>
+        <span className={file ? styles.ready : styles.hint}>
+          {file ? copy.newJob.fileReady : copy.newJob.fileHint}
+        </span>
       </label>
       <input
         id={inputId}
@@ -48,6 +51,11 @@ export function FileDrop({ file, onChange, isDisabled }: FileDropProps) {
         disabled={isDisabled}
         onChange={(event) => onChange(event.target.files?.[0] ?? null)}
       />
+      {file && (
+        <Button type="submit" variant="primary" size="lg" isBusy={isDisabled}>
+          {copy.newJob.submitUpload}
+        </Button>
+      )}
       {file && (
         <button
           type="button"

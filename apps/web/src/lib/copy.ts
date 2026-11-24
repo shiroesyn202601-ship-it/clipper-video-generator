@@ -42,6 +42,8 @@ export const copy = {
     urlPlaceholder: "https://www.youtube.com/watch?v=…",
     urlHint: "Video publik dari YouTube atau situs lain yang didukung yt-dlp.",
     submit: "Proses",
+    submitUpload: "Unggah & proses",
+    fileReady: "File siap. Klik Unggah & proses untuk mulai.",
     or: "atau",
     fileLabel: "Pilih file video",
     fileHint: "MP4, MKV, MOV, atau WEBM dari komputer ini.",

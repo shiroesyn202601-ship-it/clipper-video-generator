@@ -48,6 +48,16 @@ input:focus-visible + .drop,
   font-size: var(--text-sm);
 }
 
+.ready {
+  color: var(--color-accent);
+  font-size: var(--text-sm);
+  font-weight: 550;
+}
+
+.wrap > button[type="submit"] {
+  align-self: center;
+}
+
 .clear {
   min-width: var(--hit-min);
   padding: 0 var(--space-3);
